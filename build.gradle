@@ -1,88 +1,78 @@
+// ① ForgeGradle を classpath に追加
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:6.0.+'
+    }
+}
+
+// ② 通常プラグイン
 plugins {
     id 'eclipse'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
+// ③ 依存解決用リポジトリ
+repositories {
+    maven { url = 'https://maven.minecraftforge.net' }
+    mavenCentral()
+}
+
+// ★ ④ ForgeGradle をここで適用（この後に minecraft 構成が使える）
+apply plugin: 'net.minecraftforge.gradle'
+
+// ⑤ minecraft 依存はここで宣言（apply の後）
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.1.0'
+}
+
+// ⑥ 以降は元の設定でOK
 version = '1.0.0'
 group = 'com.example.generatormod'
 archivesBaseName = 'generatormod'
-
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + ' (' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
 minecraft {
     mappings channel: 'official', version: '1.20.1'
     copyIdeResources = true
-
     runs {
         configureEach {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
         }
-
-        client {
-            mods {
-                generatormod {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        server {
-            mods {
-                generatormod {
-                    source sourceSets.main
-                }
-            }
-        }
-
+        client { mods { generatormod { source sourceSets.main } } }
+        server { mods { generatormod { source sourceSets.main } } }
         data {
             args '--mod', 'generatormod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-
-            mods {
-                generatormod {
-                    source sourceSets.main
-                }
-            }
+            mods { generatormod { source sourceSets.main } }
         }
     }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
-dependencies {
-    minecraft 'net.minecraftforge:forge:1.20.1-47.1.0'
-}
-
 jar {
     archiveBaseName.set(archivesBaseName)
     manifest {
         attributes([
-            "Specification-Title": "generatormod",
-            "Specification-Vendor": "generator",
-            "Specification-Version": "1",
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
-            "Implementation-Vendor": "generator",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                "Specification-Title": "generatormod",
+                "Specification-Vendor": "generator",
+                "Specification-Version": "1",
+                "Implementation-Title": project.name,
+                "Implementation-Version": "${version}",
+                "Implementation-Vendor": "generator",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
-
 jar.finalizedBy('reobfJar')
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact jar
-        }
-    }
-    repositories {
-        maven {
-            url "file:///${project.projectDir}/mcmodsrepo"
-        }
-    }
+    publications { mavenJava(MavenPublication) { artifact jar } }
+    repositories { maven { url "file:///${project.projectDir}/mcmodsrepo" } }
 }

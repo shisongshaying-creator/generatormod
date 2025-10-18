@@ -43,30 +43,40 @@ public class GeneratorScreen extends Screen {
 
         int listTop = MARGIN + 20;
         int listBottom = this.height - MARGIN;
+
         this.itemList = new ItemSelectionList(this.minecraft, LIST_WIDTH, this.height, listTop, listBottom, 24);
         this.itemList.setLeftPos(MARGIN);
         addWidget(this.itemList);
+
         List<Item> items = GeneratorItems.getAvailableItems();
         for (Item item : items) {
-            this.itemList.addEntry(new ItemEntry(item));
+            this.itemList.addItem(new ItemEntry(item)); // ← 外側からは addItem() を使う
         }
         this.itemList.selectItem(this.selectedItem);
 
         int buttonsLeft = MARGIN + LIST_WIDTH + MARGIN;
         int buttonsTop = this.height - MARGIN - BUTTON_HEIGHT * 2 - 8;
-        this.executeButton = addRenderableWidget(Button.builder(Component.translatable("button." + GeneratorMod.MODID + ".execute"), button -> execute())
-            .bounds(buttonsLeft, buttonsTop, BUTTON_WIDTH, BUTTON_HEIGHT)
-            .build());
-        this.collectButton = addRenderableWidget(Button.builder(Component.translatable("button." + GeneratorMod.MODID + ".collect"), button -> collect())
-            .bounds(buttonsLeft + BUTTON_WIDTH + 10, buttonsTop, BUTTON_WIDTH, BUTTON_HEIGHT)
-            .build());
 
-        this.speedButton = addRenderableWidget(Button.builder(Component.translatable("button." + GeneratorMod.MODID + ".speed_upgrade"), button -> upgrade(UpgradeGeneratorPacket.Type.SPEED))
-            .bounds(buttonsLeft, buttonsTop + BUTTON_HEIGHT + 8, BUTTON_WIDTH, BUTTON_HEIGHT)
-            .build());
-        this.quantityButton = addRenderableWidget(Button.builder(Component.translatable("button." + GeneratorMod.MODID + ".quantity_upgrade"), button -> upgrade(UpgradeGeneratorPacket.Type.QUANTITY))
-            .bounds(buttonsLeft + BUTTON_WIDTH + 10, buttonsTop + BUTTON_HEIGHT + 8, BUTTON_WIDTH, BUTTON_HEIGHT)
-            .build());
+        this.executeButton = addRenderableWidget(
+                Button.builder(Component.translatable("button." + GeneratorMod.MODID + ".execute"), b -> execute())
+                        .bounds(buttonsLeft, buttonsTop, BUTTON_WIDTH, BUTTON_HEIGHT)
+                        .build()
+        );
+        this.collectButton = addRenderableWidget(
+                Button.builder(Component.translatable("button." + GeneratorMod.MODID + ".collect"), b -> collect())
+                        .bounds(buttonsLeft + BUTTON_WIDTH + 10, buttonsTop, BUTTON_WIDTH, BUTTON_HEIGHT)
+                        .build()
+        );
+        this.speedButton = addRenderableWidget(
+                Button.builder(Component.translatable("button." + GeneratorMod.MODID + ".speed_upgrade"), b -> upgrade(UpgradeGeneratorPacket.Type.SPEED))
+                        .bounds(buttonsLeft, buttonsTop + BUTTON_HEIGHT + 8, BUTTON_WIDTH, BUTTON_HEIGHT)
+                        .build()
+        );
+        this.quantityButton = addRenderableWidget(
+                Button.builder(Component.translatable("button." + GeneratorMod.MODID + ".quantity_upgrade"), b -> upgrade(UpgradeGeneratorPacket.Type.QUANTITY))
+                        .bounds(buttonsLeft + BUTTON_WIDTH + 10, buttonsTop + BUTTON_HEIGHT + 8, BUTTON_WIDTH, BUTTON_HEIGHT)
+                        .build()
+        );
 
         updateButtons();
     }
@@ -89,8 +99,13 @@ public class GeneratorScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(graphics);
+
         graphics.drawString(this.font, this.title, MARGIN, MARGIN, 0xFFFFFF, false);
-        graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".select_item"), MARGIN, MARGIN + 10, 0xA0A0A0, false);
+        graphics.drawString(this.font,
+                Component.translatable("screen." + GeneratorMod.MODID + ".select_item"),
+                MARGIN, MARGIN + 10, 0xA0A0A0, false);
+
+        // リストは自前で描画（子に追加しているので super.render でも描かれるが、ここで先に）
         this.itemList.render(graphics, mouseX, mouseY, partialTick);
 
         int infoLeft = MARGIN + LIST_WIDTH + MARGIN;
@@ -109,25 +124,35 @@ public class GeneratorScreen extends Screen {
         ClientGeneratorState state = ClientGeneratorState.INSTANCE;
         Component name = Component.translatable("screen." + GeneratorMod.MODID + ".no_selection");
         Item item = null;
+
         if (selectedItem != null) {
             item = BuiltInRegistries.ITEM.get(selectedItem);
             if (item != null) {
                 name = item.getDescription();
             }
         }
-        graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".selected"), left, top, 0xFFFFFF, false);
+
+        graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".selected"),
+                left, top, 0xFFFFFF, false);
         graphics.drawString(this.font, name, left, top + 12, 0xEEEEEE, false);
 
-        long interval = selectedItem != null && item != null
-            ? GeneratorItems.computeIntervalMillis(item, state.getSpeedLevel())
-            : state.getIntervalMillis();
+        long interval = (selectedItem != null && item != null)
+                ? GeneratorItems.computeIntervalMillis(item, state.getSpeedLevel())
+                : state.getIntervalMillis();
         int amount = state.getAmountPerCycle();
         long perItem = amount > 0 ? Math.max(1L, interval / amount) : interval;
-        graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".time_per_item", formatDuration(perItem)), left, top + 30, 0xFFFFFF, false);
+
+        graphics.drawString(this.font,
+                Component.translatable("screen." + GeneratorMod.MODID + ".time_per_item", formatDuration(perItem)),
+                left, top + 30, 0xFFFFFF, false);
 
         int lineY = top + 50;
-        graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".speed_level", state.getSpeedLevel(), getUpgradeCost(state.getSpeedLevel())), left, lineY, 0xC0C0C0, false);
-        graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".quantity_level", state.getQuantityLevel(), getUpgradeCost(state.getQuantityLevel())), left, lineY + 12, 0xC0C0C0, false);
+        graphics.drawString(this.font,
+                Component.translatable("screen." + GeneratorMod.MODID + ".speed_level", state.getSpeedLevel(), getUpgradeCost(state.getSpeedLevel())),
+                left, lineY, 0xC0C0C0, false);
+        graphics.drawString(this.font,
+                Component.translatable("screen." + GeneratorMod.MODID + ".quantity_level", state.getQuantityLevel(), getUpgradeCost(state.getQuantityLevel())),
+                left, lineY + 12, 0xC0C0C0, false);
     }
 
     private void drawLog(GuiGraphics graphics, int left, int top, int right) {
@@ -141,18 +166,33 @@ public class GeneratorScreen extends Screen {
             graphics.drawString(this.font, messageComponent, left, y, 0xFFD37F, false);
             y += 12;
         }
-        graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".status", state.isRunning() ? Component.translatable("screen." + GeneratorMod.MODID + ".running") : Component.translatable("screen." + GeneratorMod.MODID + ".stopped")), left, y, 0xFFFFFF, false);
+
+        graphics.drawString(this.font,
+                Component.translatable("screen." + GeneratorMod.MODID + ".status",
+                        state.isRunning()
+                                ? Component.translatable("screen." + GeneratorMod.MODID + ".running")
+                                : Component.translatable("screen." + GeneratorMod.MODID + ".stopped")),
+                left, y, 0xFFFFFF, false);
         y += 12;
-        graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".stored", state.getStoredItems()), left, y, 0xFFFFFF, false);
+
+        graphics.drawString(this.font,
+                Component.translatable("screen." + GeneratorMod.MODID + ".stored", state.getStoredItems()),
+                left, y, 0xFFFFFF, false);
         y += 12;
+
         if (state.isRunning() && state.getIntervalMillis() > 0) {
             long until = Math.max(0L, state.getIntervalMillis() - state.getLeftoverMillis());
-            graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".next_in", formatDuration(until)), left, y, 0xFFFFFF, false);
+            graphics.drawString(this.font,
+                    Component.translatable("screen." + GeneratorMod.MODID + ".next_in", formatDuration(until)),
+                    left, y, 0xFFFFFF, false);
             y += 12;
         }
+
         if (state.isRunning() && state.getRunningSince() > 0) {
             long elapsed = System.currentTimeMillis() - state.getRunningSince();
-            graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".elapsed", formatDuration(elapsed)), left, y, 0xFFFFFF, false);
+            graphics.drawString(this.font,
+                    Component.translatable("screen." + GeneratorMod.MODID + ".elapsed", formatDuration(elapsed)),
+                    left, y, 0xFFFFFF, false);
         }
     }
 
@@ -162,12 +202,8 @@ public class GeneratorScreen extends Screen {
         long hours = minutes / 60L;
         seconds %= 60L;
         minutes %= 60L;
-        if (hours > 0) {
-            return String.format(Locale.ROOT, "%d:%02d:%02d", hours, minutes, seconds);
-        }
-        if (minutes > 0) {
-            return String.format(Locale.ROOT, "%d:%02d", minutes, seconds);
-        }
+        if (hours > 0) return String.format(Locale.ROOT, "%d:%02d:%02d", hours, minutes, seconds);
+        if (minutes > 0) return String.format(Locale.ROOT, "%d:%02d", minutes, seconds);
         return seconds + "s";
     }
 
@@ -176,9 +212,7 @@ public class GeneratorScreen extends Screen {
     }
 
     private void execute() {
-        if (selectedItem == null) {
-            return;
-        }
+        if (selectedItem == null) return;
         GeneratorNetwork.CHANNEL.sendToServer(new ExecuteGeneratorPacket(selectedItem));
     }
 
@@ -187,9 +221,7 @@ public class GeneratorScreen extends Screen {
     }
 
     private void upgrade(UpgradeGeneratorPacket.Type type) {
-        if (selectedItem == null) {
-            return;
-        }
+        if (selectedItem == null) return;
         GeneratorNetwork.CHANNEL.sendToServer(new UpgradeGeneratorPacket(type));
     }
 
@@ -206,9 +238,17 @@ public class GeneratorScreen extends Screen {
         updateButtons();
     }
 
+    //======================
+    // リスト実装
+    //======================
     private class ItemSelectionList extends ObjectSelectionList<ItemEntry> {
         private ItemSelectionList(Minecraft minecraft, int width, int screenHeight, int top, int bottom, int itemHeight) {
             super(minecraft, width, screenHeight, top, bottom, itemHeight);
+        }
+
+        // ← 外側から protected の addEntry に触らないためのラッパー
+        public void addItem(ItemEntry entry) {
+            this.addEntry(entry);
         }
 
         @Override
@@ -247,8 +287,11 @@ public class GeneratorScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int index, int top, int left, int width, int height, int mouseX, int mouseY, boolean hovered, float partialTick) {
-            int textColor = hovered || GeneratorScreen.this.selectedItem != null && GeneratorScreen.this.selectedItem.equals(this.id) ? 0xFFFFFF : 0xC0C0C0;
+        public void render(GuiGraphics graphics, int index, int top, int left, int width, int height,
+                           int mouseX, int mouseY, boolean hovered, float partialTick) {
+            boolean selected = GeneratorScreen.this.selectedItem != null
+                    && GeneratorScreen.this.selectedItem.equals(this.id);
+            int textColor = (hovered || selected) ? 0xFFFFFF : 0xC0C0C0;
             graphics.drawString(GeneratorScreen.this.font, this.name, left + 4, top + 6, textColor, false);
         }
 

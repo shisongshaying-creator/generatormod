@@ -4,10 +4,10 @@ import com.example.generatormod.GeneratorMod;
 import com.example.generatormod.generator.GeneratorState;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.ChannelBuilder;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.SimpleChannel;
+import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.network.NetworkRegistry;
 
 public final class GeneratorNetwork {
     private static final String PROTOCOL_VERSION = "1";
@@ -19,11 +19,12 @@ public final class GeneratorNetwork {
     }
 
     public static void init() {
-        CHANNEL = ChannelBuilder.named(new ResourceLocation(GeneratorMod.MODID, "main"))
-            .networkProtocolVersion(() -> PROTOCOL_VERSION)
-            .clientAcceptedVersions(PROTOCOL_VERSION::equals)
-            .serverAcceptedVersions(PROTOCOL_VERSION::equals)
-            .simpleChannel();
+        CHANNEL = NetworkRegistry.ChannelBuilder
+                .named(new ResourceLocation(GeneratorMod.MODID, "main"))
+                .networkProtocolVersion(() -> PROTOCOL_VERSION)
+                .clientAcceptedVersions(PROTOCOL_VERSION::equals)
+                .serverAcceptedVersions(PROTOCOL_VERSION::equals)
+                .simpleChannel();
 
         CHANNEL.messageBuilder(RequestOpenGeneratorScreenPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
             .decoder(RequestOpenGeneratorScreenPacket::decode)
