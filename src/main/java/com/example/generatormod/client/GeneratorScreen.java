@@ -16,6 +16,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -108,14 +109,17 @@ public class GeneratorScreen extends Screen {
         // リストは自前で描画（子に追加しているので super.render でも描かれるが、ここで先に）
         this.itemList.render(graphics, mouseX, mouseY, partialTick);
 
-        int infoLeft = MARGIN + LIST_WIDTH + MARGIN;
+        int buttonsLeft = MARGIN + LIST_WIDTH + MARGIN;
+        int buttonsTop = this.height - MARGIN - BUTTON_HEIGHT * 2 - 8;
+
+        int infoLeft = buttonsLeft;
         int infoTop = MARGIN;
         int infoRight = this.width - MARGIN;
-        int infoBottom = this.height - MARGIN - BUTTON_HEIGHT * 2 - 16;
+        int infoBottom = buttonsTop - 8;
         graphics.fill(infoLeft - 4, infoTop - 4, infoRight + 4, infoBottom + 4, 0x88000000);
 
         drawInfo(graphics, infoLeft, infoTop);
-        drawLog(graphics, infoLeft, infoBottom + 8, infoRight);
+        drawSummary(graphics, infoLeft, infoBottom, infoRight, buttonsLeft, buttonsTop);
 
         super.render(graphics, mouseX, mouseY, partialTick);
     }
@@ -155,44 +159,64 @@ public class GeneratorScreen extends Screen {
                 left, lineY + 12, 0xC0C0C0, false);
     }
 
-    private void drawLog(GuiGraphics graphics, int left, int top, int right) {
+    private void drawSummary(GuiGraphics graphics, int left, int infoBottom, int right, int buttonsLeft, int buttonsTop) {
         ClientGeneratorState state = ClientGeneratorState.INSTANCE;
-        int y = top + 4;
-        int width = right - left;
-        graphics.fill(left - 4, top - 4, right + 4, top + 80, 0x88000000);
+        int lineHeight = 12;
 
-        if (!state.getMessage().isEmpty()) {
-            Component messageComponent = Component.translatable("message." + GeneratorMod.MODID + "." + state.getMessage());
-            graphics.drawString(this.font, messageComponent, left, y, 0xFFD37F, false);
-            y += 12;
+        Component statusComponent = Component.translatable("screen." + GeneratorMod.MODID + ".status",
+                state.isRunning()
+                        ? Component.translatable("screen." + GeneratorMod.MODID + ".running")
+                        : Component.translatable("screen." + GeneratorMod.MODID + ".stopped"));
+        Component storedComponent = Component.translatable("screen." + GeneratorMod.MODID + ".stored", state.getStoredItems());
+
+        boolean hasNextIn = state.isRunning() && state.getIntervalMillis() > 0;
+        Component nextComponent = hasNextIn
+                ? Component.translatable("screen." + GeneratorMod.MODID + ".next_in",
+                        formatDuration(Math.max(0L, state.getIntervalMillis() - state.getLeftoverMillis())))
+                : null;
+
+        boolean hasMessage = !state.getMessage().isEmpty();
+        Component messageComponent = hasMessage
+                ? Component.translatable("message." + GeneratorMod.MODID + "." + state.getMessage())
+                : null;
+
+        List<Component> lines = new ArrayList<>();
+        List<Integer> colors = new ArrayList<>();
+
+        int statusIndex;
+        if (hasMessage) {
+            lines.add(messageComponent);
+            colors.add(0xFFD37F);
         }
+        if (hasNextIn) {
+            lines.add(nextComponent);
+            colors.add(0xFFFFFF);
+        }
+        statusIndex = lines.size();
+        lines.add(statusComponent);
+        colors.add(0xFFFFFF);
+        lines.add(storedComponent);
+        colors.add(0xFFFFFF);
 
-        graphics.drawString(this.font,
-                Component.translatable("screen." + GeneratorMod.MODID + ".status",
-                        state.isRunning()
-                                ? Component.translatable("screen." + GeneratorMod.MODID + ".running")
-                                : Component.translatable("screen." + GeneratorMod.MODID + ".stopped")),
-                left, y, 0xFFFFFF, false);
-        y += 12;
+        int topLineY = buttonsTop - lineHeight * lines.size() - 4;
+        int backgroundTop = Math.min(topLineY - 4, infoBottom - 4);
+        int backgroundBottom = buttonsTop - 2;
+        graphics.fill(left - 4, backgroundTop, right + 4, backgroundBottom, 0x88000000);
 
-        graphics.drawString(this.font,
-                Component.translatable("screen." + GeneratorMod.MODID + ".stored", state.getStoredItems()),
-                left, y, 0xFFFFFF, false);
-        y += 12;
-
-        if (state.isRunning() && state.getIntervalMillis() > 0) {
-            long until = Math.max(0L, state.getIntervalMillis() - state.getLeftoverMillis());
-            graphics.drawString(this.font,
-                    Component.translatable("screen." + GeneratorMod.MODID + ".next_in", formatDuration(until)),
-                    left, y, 0xFFFFFF, false);
-            y += 12;
+        int y = topLineY;
+        for (int i = 0; i < lines.size(); i++) {
+            Component line = lines.get(i);
+            int color = colors.get(i);
+            graphics.drawString(this.font, line, buttonsLeft, y, color, false);
+            y += lineHeight;
         }
 
         if (state.isRunning() && state.getRunningSince() > 0) {
-            long elapsed = System.currentTimeMillis() - state.getRunningSince();
-            graphics.drawString(this.font,
-                    Component.translatable("screen." + GeneratorMod.MODID + ".elapsed", formatDuration(elapsed)),
-                    left, y, 0xFFFFFF, false);
+            long elapsed = Math.max(0L, System.currentTimeMillis() - state.getRunningSince());
+            Component elapsedComponent = Component.translatable("screen." + GeneratorMod.MODID + ".elapsed", formatDuration(elapsed));
+            int elapsedX = right - this.font.width(elapsedComponent);
+            int elapsedY = topLineY + statusIndex * lineHeight;
+            graphics.drawString(this.font, elapsedComponent, elapsedX, elapsedY, 0xFFFFFF, false);
         }
     }
 
