@@ -36,5 +36,10 @@
   "screen.generatormod.cloud_storage": "クラウドストレージ",
   "screen.generatormod.cloud_storage_empty": "保管されているアイテムはありません",
   "screen.generatormod.cloud_storage_amount": "保管数: %s個",
-  "button.generatormod.withdraw": "引き出す"
+  "screen.generatormod.cloud_storage_inventory": "手持ち: %s個",
+  "screen.generatormod.cloud_storage_amount_label": "個数",
+  "screen.generatormod.cloud_storage_hint": "未入力の場合は所持数すべてが対象になります",
+  "screen.generatormod.cloud_storage_select": "操作するアイテムを選択してください",
+  "button.generatormod.withdraw": "引き出す",
+  "button.generatormod.deposit": "預ける"
 }

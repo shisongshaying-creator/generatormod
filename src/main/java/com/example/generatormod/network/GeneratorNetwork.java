@@ -58,6 +58,12 @@ public final class GeneratorNetwork {
             .consumerMainThread(WithdrawCloudStoragePacket::handle)
             .add();
 
+        CHANNEL.messageBuilder(DepositCloudStoragePacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+            .decoder(DepositCloudStoragePacket::decode)
+            .encoder(DepositCloudStoragePacket::encode)
+            .consumerMainThread(DepositCloudStoragePacket::handle)
+            .add();
+
         CHANNEL.messageBuilder(UpgradeGeneratorPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
             .decoder(UpgradeGeneratorPacket::decode)
             .encoder(UpgradeGeneratorPacket::encode)
