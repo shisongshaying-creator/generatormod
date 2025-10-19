@@ -36,5 +36,10 @@
   "screen.generatormod.cloud_storage": "Cloud Storage",
   "screen.generatormod.cloud_storage_empty": "No items stored",
   "screen.generatormod.cloud_storage_amount": "Stored: %s",
-  "button.generatormod.withdraw": "Withdraw"
+  "screen.generatormod.cloud_storage_inventory": "Inventory: %s",
+  "screen.generatormod.cloud_storage_amount_label": "Amount",
+  "screen.generatormod.cloud_storage_hint": "Leave empty to use all available",
+  "screen.generatormod.cloud_storage_select": "Select an item to manage",
+  "button.generatormod.withdraw": "Withdraw",
+  "button.generatormod.deposit": "Deposit"
 }
