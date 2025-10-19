@@ -13,53 +13,62 @@ import java.util.Optional;
 
 public final class GeneratorItems {
     public static final double SPEED_REDUCTION_PER_LEVEL = 0.85D;
-    private static final Map<Item, Long> BASE_INTERVALS = new LinkedHashMap<>();
+    private static final int DEFAULT_UNLOCK_COST = 4;
+    private static final ItemConfig DEFAULT_CONFIG = new ItemConfig(minutes(5), DEFAULT_UNLOCK_COST);
+    private static final Map<Item, ItemConfig> ITEM_CONFIGS = new LinkedHashMap<>();
+
+    public record ItemConfig(long interval, int unlockCost) {
+    }
 
     static {
-        // Early-game building materials (quick unlocks for new players)
-        BASE_INTERVALS.put(Items.COBBLESTONE, seconds(30));
-        BASE_INTERVALS.put(Items.STONE, seconds(45));
-        BASE_INTERVALS.put(Items.OAK_LOG, seconds(45));
-        BASE_INTERVALS.put(Items.SPRUCE_LOG, seconds(45));
-        BASE_INTERVALS.put(Items.BIRCH_LOG, seconds(45));
-        BASE_INTERVALS.put(Items.JUNGLE_LOG, seconds(45));
-        BASE_INTERVALS.put(Items.ACACIA_LOG, seconds(45));
-        BASE_INTERVALS.put(Items.DARK_OAK_LOG, seconds(45));
-        BASE_INTERVALS.put(Items.MANGROVE_LOG, seconds(45));
-        BASE_INTERVALS.put(Items.CHERRY_LOG, seconds(45));
-        BASE_INTERVALS.put(Items.BAMBOO, seconds(30));
+        // Common building materials (abundant resources demand higher unlock bundles)
+        register(Items.COBBLESTONE, seconds(30), 128);
+        register(Items.STONE, seconds(45), 112);
+        register(Items.OAK_LOG, seconds(45), 96);
+        register(Items.SPRUCE_LOG, seconds(45), 96);
+        register(Items.BIRCH_LOG, seconds(45), 96);
+        register(Items.JUNGLE_LOG, seconds(45), 96);
+        register(Items.ACACIA_LOG, seconds(45), 96);
+        register(Items.DARK_OAK_LOG, seconds(45), 96);
+        register(Items.MANGROVE_LOG, seconds(45), 96);
+        register(Items.CHERRY_LOG, seconds(45), 96);
+        register(Items.BAMBOO, seconds(30), 80);
 
-        // Overworld minerals and metals (progressively slower per rarity)
-        BASE_INTERVALS.put(Items.COAL, minutes(1));
-        BASE_INTERVALS.put(Items.LAPIS_LAZULI, minutes(2));
-        BASE_INTERVALS.put(Items.REDSTONE, minutes(2) + seconds(30));
-        BASE_INTERVALS.put(Items.COPPER_INGOT, minutes(2) + seconds(30));
-        BASE_INTERVALS.put(Items.IRON_INGOT, minutes(3));
-        BASE_INTERVALS.put(Items.GOLD_INGOT, minutes(4));
-        BASE_INTERVALS.put(Items.AMETHYST_SHARD, minutes(5));
-        BASE_INTERVALS.put(Items.EMERALD, minutes(6));
-        BASE_INTERVALS.put(Items.DIAMOND, minutes(8));
+        // Overworld minerals and metals (unlock costs scale with acquisition difficulty)
+        register(Items.COAL, minutes(1), 96);
+        register(Items.LAPIS_LAZULI, minutes(2), 72);
+        register(Items.REDSTONE, minutes(2) + seconds(30), 88);
+        register(Items.COPPER_INGOT, minutes(2) + seconds(30), 88);
+        register(Items.IRON_INGOT, minutes(3), 72);
+        register(Items.GOLD_INGOT, minutes(4), 64);
+        register(Items.AMETHYST_SHARD, minutes(5), 56);
+        register(Items.EMERALD, minutes(6), 40);
+        register(Items.DIAMOND, minutes(8), 32);
 
         // Nether resources (mix of farmable and mob drops)
-        BASE_INTERVALS.put(Items.NETHERRACK, minutes(1));
-        BASE_INTERVALS.put(Items.QUARTZ, minutes(2));
-        BASE_INTERVALS.put(Items.GLOWSTONE_DUST, minutes(3) + seconds(30));
-        BASE_INTERVALS.put(Items.MAGMA_CREAM, minutes(5));
-        BASE_INTERVALS.put(Items.BLAZE_ROD, minutes(6) + seconds(30));
-        BASE_INTERVALS.put(Items.ANCIENT_DEBRIS, minutes(20)); // Rare ore: long cooldown keeps it prestigious.
-        BASE_INTERVALS.put(Items.NETHERITE_SCRAP, minutes(25)); // Processed debris remains intentionally slower than ingots.
-        BASE_INTERVALS.put(Items.NETHERITE_INGOT, minutes(30)); // Crafted alloy - longest among resource tiers.
+        register(Items.NETHERRACK, minutes(1), 96);
+        register(Items.QUARTZ, minutes(2), 72);
+        register(Items.GLOWSTONE_DUST, minutes(3) + seconds(30), 64);
+        register(Items.MAGMA_CREAM, minutes(5), 48);
+        register(Items.BLAZE_ROD, minutes(6) + seconds(30), 40);
+        register(Items.ANCIENT_DEBRIS, minutes(20), 8); // Rare ore: long cooldown keeps it prestigious.
+        register(Items.NETHERITE_SCRAP, minutes(25), 6); // Processed debris remains intentionally slower than ingots.
+        register(Items.NETHERITE_INGOT, minutes(30), 4); // Crafted alloy - longest among resource tiers.
 
-        // The End and other exotic drops (longer cadences preserve late-game pacing)
-        BASE_INTERVALS.put(Items.END_STONE, minutes(2));
-        BASE_INTERVALS.put(Items.CHORUS_FRUIT, minutes(3));
-        BASE_INTERVALS.put(Items.SHULKER_SHELL, minutes(12)); // Shells are farm-limited; slow cadence protects progression pacing.
-        BASE_INTERVALS.put(Items.DRAGON_BREATH, minutes(15)); // Bottled dragon breath is semi-renewable but intentionally scarce.
-        BASE_INTERVALS.put(Items.TOTEM_OF_UNDYING, minutes(20)); // Raid reward emulates raid effort before automation.
-        BASE_INTERVALS.put(Items.NETHER_STAR, minutes(40)); // Boss trophy: extremely long interval reflects wither fight rarity.
+        // The End and other exotic drops (rarer trophies ask for fewer unlock items)
+        register(Items.END_STONE, minutes(2), 72);
+        register(Items.CHORUS_FRUIT, minutes(3), 64);
+        register(Items.SHULKER_SHELL, minutes(12), 16); // Shells are farm-limited; slow cadence protects progression pacing.
+        register(Items.DRAGON_BREATH, minutes(15), 12); // Bottled dragon breath is semi-renewable but intentionally scarce.
+        register(Items.TOTEM_OF_UNDYING, minutes(20), 8); // Raid reward emulates raid effort before automation.
+        register(Items.NETHER_STAR, minutes(40), 4); // Boss trophy: extremely long interval reflects wither fight rarity.
     }
 
     private GeneratorItems() {
+    }
+
+    private static void register(Item item, long interval, int unlockCost) {
+        ITEM_CONFIGS.put(item, new ItemConfig(interval, unlockCost));
     }
 
     private static long minutes(int value) {
@@ -71,11 +80,22 @@ public final class GeneratorItems {
     }
 
     public static List<Item> getAvailableItems() {
-        return Collections.unmodifiableList(BASE_INTERVALS.keySet().stream().toList());
+        return Collections.unmodifiableList(ITEM_CONFIGS.keySet().stream().toList());
     }
 
     public static long getBaseInterval(Item item) {
-        return BASE_INTERVALS.getOrDefault(item, minutes(5));
+        return ITEM_CONFIGS.getOrDefault(item, DEFAULT_CONFIG).interval();
+    }
+
+    public static int getUnlockCost(Item item) {
+        return ITEM_CONFIGS.getOrDefault(item, DEFAULT_CONFIG).unlockCost();
+    }
+
+    public static int getUnlockCost(ResourceLocation id) {
+        if (id == null) {
+            return DEFAULT_CONFIG.unlockCost();
+        }
+        return resolve(id).map(GeneratorItems::getUnlockCost).orElse(DEFAULT_CONFIG.unlockCost());
     }
 
     public static long computeIntervalMillis(Item item, int speedLevel) {

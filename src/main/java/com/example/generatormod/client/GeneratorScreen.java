@@ -2,7 +2,6 @@ package com.example.generatormod.client;
 
 import com.example.generatormod.GeneratorMod;
 import com.example.generatormod.generator.GeneratorItems;
-import com.example.generatormod.generator.GeneratorState;
 import com.example.generatormod.network.CollectGeneratorPacket;
 import com.example.generatormod.network.ExecuteGeneratorPacket;
 import com.example.generatormod.network.GeneratorNetwork;
@@ -143,10 +142,11 @@ public class GeneratorScreen extends Screen {
         graphics.drawString(this.font, name, left, lineY, 0xEEEEEE, false);
         lineY += 18;
 
+        int unlockCost = GeneratorItems.getUnlockCost(selectedItem);
         boolean locked = selectedItem != null && !state.isUnlocked(selectedItem);
         if (locked) {
             graphics.drawString(this.font,
-                    Component.translatable("screen." + GeneratorMod.MODID + ".locked_detail", GeneratorState.UNLOCK_COST),
+                    Component.translatable("screen." + GeneratorMod.MODID + ".locked_detail", unlockCost),
                     left, lineY, 0xFF6666, false);
             lineY += 14;
         }
@@ -235,7 +235,8 @@ public class GeneratorScreen extends Screen {
     private Component createMessageComponent(String messageKey) {
         String base = "message." + GeneratorMod.MODID + "." + messageKey;
         if ("unlock_missing_item".equals(messageKey)) {
-            return Component.translatable(base, GeneratorState.UNLOCK_COST);
+            int unlockCost = GeneratorItems.getUnlockCost(this.selectedItem);
+            return Component.translatable(base, unlockCost);
         }
         return Component.translatable(base);
     }
