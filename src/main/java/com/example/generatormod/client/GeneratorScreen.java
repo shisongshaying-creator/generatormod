@@ -95,8 +95,10 @@ public class GeneratorScreen extends Screen {
         boolean unlocked = hasSelection && state.isUnlocked(this.selectedItem);
         this.executeButton.active = hasSelection && !state.isRunning();
         this.collectButton.active = state.isRunning() || state.getStoredItems() > 0;
-        boolean canUpgradeSpeed = unlocked && state.getSpeedLevel() < GeneratorState.MAX_LEVEL;
-        boolean canUpgradeQuantity = unlocked && state.getQuantityLevel() < GeneratorState.MAX_LEVEL;
+        int speedLevel = state.getSpeedLevel(this.selectedItem);
+        int quantityLevel = state.getQuantityLevel(this.selectedItem);
+        boolean canUpgradeSpeed = unlocked && speedLevel < GeneratorState.MAX_LEVEL;
+        boolean canUpgradeQuantity = unlocked && quantityLevel < GeneratorState.MAX_LEVEL;
         this.speedButton.active = canUpgradeSpeed;
         this.quantityButton.active = canUpgradeQuantity;
     }
@@ -154,10 +156,12 @@ public class GeneratorScreen extends Screen {
             lineY += 14;
         }
 
+        int speedLevel = state.getSpeedLevel(this.selectedItem);
+        int quantityLevel = state.getQuantityLevel(this.selectedItem);
         long interval = (selectedItem != null && item != null)
-                ? GeneratorItems.computeIntervalMillis(item, state.getSpeedLevel())
+                ? GeneratorItems.computeIntervalMillis(item, speedLevel)
                 : state.getIntervalMillis();
-        int amount = state.getAmountPerCycle();
+        int amount = GeneratorItems.computeAmountPerCycle(quantityLevel);
         long perItem = amount > 0 ? Math.max(1L, interval / amount) : interval;
 
         graphics.drawString(this.font,
@@ -166,10 +170,10 @@ public class GeneratorScreen extends Screen {
 
         lineY += 20;
         graphics.drawString(this.font,
-                Component.translatable("screen." + GeneratorMod.MODID + ".speed_level", state.getSpeedLevel(), getUpgradeCost(state.getSpeedLevel())),
+                Component.translatable("screen." + GeneratorMod.MODID + ".speed_level", speedLevel, getUpgradeCost(speedLevel)),
                 left, lineY, 0xC0C0C0, false);
         graphics.drawString(this.font,
-                Component.translatable("screen." + GeneratorMod.MODID + ".quantity_level", state.getQuantityLevel(), getUpgradeCost(state.getQuantityLevel())),
+                Component.translatable("screen." + GeneratorMod.MODID + ".quantity_level", quantityLevel, getUpgradeCost(quantityLevel)),
                 left, lineY + 12, 0xC0C0C0, false);
     }
 
@@ -270,7 +274,7 @@ public class GeneratorScreen extends Screen {
 
     private void upgrade(UpgradeGeneratorPacket.Type type) {
         if (selectedItem == null) return;
-        GeneratorNetwork.CHANNEL.sendToServer(new UpgradeGeneratorPacket(type));
+        GeneratorNetwork.CHANNEL.sendToServer(new UpgradeGeneratorPacket(type, selectedItem));
     }
 
     public void refreshSelection(ResourceLocation serverSelection) {
