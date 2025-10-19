@@ -28,6 +28,8 @@
   "message.generatormod.upgrade_missing_items": "アップグレードに必要なアイテムが不足しています",
   "message.generatormod.speed_upgraded": "生成速度を強化しました",
   "message.generatormod.quantity_upgraded": "生成量を強化しました",
+  "message.generatormod.speed_max_level": "速度はすでに最大レベルです",
+  "message.generatormod.quantity_max_level": "生成量はすでに最大レベルです",
   "message.generatormod.unlocked": "ジェネレーターを解放しました",
   "message.generatormod.unlock_missing_item": "解放には同じアイテムが%s個必要です"
 }

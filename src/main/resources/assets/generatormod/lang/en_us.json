@@ -28,6 +28,8 @@
   "message.generatormod.upgrade_missing_items": "Not enough items for upgrade",
   "message.generatormod.speed_upgraded": "Speed upgraded",
   "message.generatormod.quantity_upgraded": "Yield upgraded",
+  "message.generatormod.speed_max_level": "Speed is already at maximum level",
+  "message.generatormod.quantity_max_level": "Yield is already at maximum level",
   "message.generatormod.unlocked": "Generator unlocked",
   "message.generatormod.unlock_missing_item": "Insert %s matching item(s) to unlock this generator"
 }
