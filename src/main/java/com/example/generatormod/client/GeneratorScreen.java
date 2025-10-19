@@ -2,6 +2,7 @@ package com.example.generatormod.client;
 
 import com.example.generatormod.GeneratorMod;
 import com.example.generatormod.generator.GeneratorItems;
+import com.example.generatormod.generator.GeneratorState;
 import com.example.generatormod.network.CollectGeneratorPacket;
 import com.example.generatormod.network.ExecuteGeneratorPacket;
 import com.example.generatormod.network.GeneratorNetwork;
@@ -145,7 +146,7 @@ public class GeneratorScreen extends Screen {
         boolean locked = selectedItem != null && !state.isUnlocked(selectedItem);
         if (locked) {
             graphics.drawString(this.font,
-                    Component.translatable("screen." + GeneratorMod.MODID + ".locked_detail"),
+                    Component.translatable("screen." + GeneratorMod.MODID + ".locked_detail", GeneratorState.UNLOCK_COST),
                     left, lineY, 0xFF6666, false);
             lineY += 14;
         }
@@ -188,7 +189,7 @@ public class GeneratorScreen extends Screen {
 
         boolean hasMessage = !state.getMessage().isEmpty();
         Component messageComponent = hasMessage
-                ? Component.translatable("message." + GeneratorMod.MODID + "." + state.getMessage())
+                ? createMessageComponent(state.getMessage())
                 : null;
 
         List<Component> lines = new ArrayList<>();
@@ -229,6 +230,14 @@ public class GeneratorScreen extends Screen {
             int elapsedY = topLineY + statusIndex * lineHeight;
             graphics.drawString(this.font, elapsedComponent, elapsedX, elapsedY, 0xFFFFFF, false);
         }
+    }
+
+    private Component createMessageComponent(String messageKey) {
+        String base = "message." + GeneratorMod.MODID + "." + messageKey;
+        if ("unlock_missing_item".equals(messageKey)) {
+            return Component.translatable(base, GeneratorState.UNLOCK_COST);
+        }
+        return Component.translatable(base);
     }
 
     private String formatDuration(long millis) {

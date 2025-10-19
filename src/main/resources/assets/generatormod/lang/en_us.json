@@ -4,7 +4,7 @@
   "screen.generatormod.select_item": "Select item to generate",
   "screen.generatormod.no_selection": "No item selected",
   "screen.generatormod.selected": "Selected Item",
-  "screen.generatormod.locked_detail": "Insert one item to unlock",
+  "screen.generatormod.locked_detail": "Insert %s matching item(s) to unlock",
   "screen.generatormod.time_per_item": "Time per item: %s",
   "screen.generatormod.speed_level": "Speed Lv.%s (Cost: %s)",
   "screen.generatormod.quantity_level": "Quantity Lv.%s (Cost: %s)",
@@ -29,5 +29,5 @@
   "message.generatormod.speed_upgraded": "Speed upgraded",
   "message.generatormod.quantity_upgraded": "Yield upgraded",
   "message.generatormod.unlocked": "Generator unlocked",
-  "message.generatormod.unlock_missing_item": "Insert one item to unlock this generator"
+  "message.generatormod.unlock_missing_item": "Insert %s matching item(s) to unlock this generator"
 }
