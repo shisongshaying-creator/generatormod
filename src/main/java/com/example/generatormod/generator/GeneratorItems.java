@@ -21,47 +21,47 @@ public final class GeneratorItems {
     }
 
     static {
-        // Early-game building materials (quick unlocks for new players)
-        register(Items.COBBLESTONE, seconds(30), 4);
-        register(Items.STONE, seconds(45), 4);
-        register(Items.OAK_LOG, seconds(45), 4);
-        register(Items.SPRUCE_LOG, seconds(45), 4);
-        register(Items.BIRCH_LOG, seconds(45), 4);
-        register(Items.JUNGLE_LOG, seconds(45), 4);
-        register(Items.ACACIA_LOG, seconds(45), 4);
-        register(Items.DARK_OAK_LOG, seconds(45), 4);
-        register(Items.MANGROVE_LOG, seconds(45), 4);
-        register(Items.CHERRY_LOG, seconds(45), 4);
-        register(Items.BAMBOO, seconds(30), 4);
+        // Common building materials (abundant resources demand higher unlock bundles)
+        register(Items.COBBLESTONE, seconds(30), 128);
+        register(Items.STONE, seconds(45), 112);
+        register(Items.OAK_LOG, seconds(45), 96);
+        register(Items.SPRUCE_LOG, seconds(45), 96);
+        register(Items.BIRCH_LOG, seconds(45), 96);
+        register(Items.JUNGLE_LOG, seconds(45), 96);
+        register(Items.ACACIA_LOG, seconds(45), 96);
+        register(Items.DARK_OAK_LOG, seconds(45), 96);
+        register(Items.MANGROVE_LOG, seconds(45), 96);
+        register(Items.CHERRY_LOG, seconds(45), 96);
+        register(Items.BAMBOO, seconds(30), 80);
 
-        // Overworld minerals and metals (progressively slower per rarity)
-        register(Items.COAL, minutes(1), 4);
-        register(Items.LAPIS_LAZULI, minutes(2), 5);
-        register(Items.REDSTONE, minutes(2) + seconds(30), 5);
-        register(Items.COPPER_INGOT, minutes(2) + seconds(30), 5);
-        register(Items.IRON_INGOT, minutes(3), 6);
-        register(Items.GOLD_INGOT, minutes(4), 6);
-        register(Items.AMETHYST_SHARD, minutes(5), 6);
-        register(Items.EMERALD, minutes(6), 7);
-        register(Items.DIAMOND, minutes(8), 8);
+        // Overworld minerals and metals (unlock costs scale with acquisition difficulty)
+        register(Items.COAL, minutes(1), 96);
+        register(Items.LAPIS_LAZULI, minutes(2), 72);
+        register(Items.REDSTONE, minutes(2) + seconds(30), 88);
+        register(Items.COPPER_INGOT, minutes(2) + seconds(30), 88);
+        register(Items.IRON_INGOT, minutes(3), 72);
+        register(Items.GOLD_INGOT, minutes(4), 64);
+        register(Items.AMETHYST_SHARD, minutes(5), 56);
+        register(Items.EMERALD, minutes(6), 40);
+        register(Items.DIAMOND, minutes(8), 32);
 
         // Nether resources (mix of farmable and mob drops)
-        register(Items.NETHERRACK, minutes(1), 4);
-        register(Items.QUARTZ, minutes(2), 5);
-        register(Items.GLOWSTONE_DUST, minutes(3) + seconds(30), 5);
-        register(Items.MAGMA_CREAM, minutes(5), 6);
-        register(Items.BLAZE_ROD, minutes(6) + seconds(30), 7);
-        register(Items.ANCIENT_DEBRIS, minutes(20), 10); // Rare ore: long cooldown keeps it prestigious.
-        register(Items.NETHERITE_SCRAP, minutes(25), 12); // Processed debris remains intentionally slower than ingots.
-        register(Items.NETHERITE_INGOT, minutes(30), 14); // Crafted alloy - longest among resource tiers.
+        register(Items.NETHERRACK, minutes(1), 96);
+        register(Items.QUARTZ, minutes(2), 72);
+        register(Items.GLOWSTONE_DUST, minutes(3) + seconds(30), 64);
+        register(Items.MAGMA_CREAM, minutes(5), 48);
+        register(Items.BLAZE_ROD, minutes(6) + seconds(30), 40);
+        register(Items.ANCIENT_DEBRIS, minutes(20), 8); // Rare ore: long cooldown keeps it prestigious.
+        register(Items.NETHERITE_SCRAP, minutes(25), 6); // Processed debris remains intentionally slower than ingots.
+        register(Items.NETHERITE_INGOT, minutes(30), 4); // Crafted alloy - longest among resource tiers.
 
-        // The End and other exotic drops (longer cadences preserve late-game pacing)
-        register(Items.END_STONE, minutes(2), 5);
-        register(Items.CHORUS_FRUIT, minutes(3), 5);
-        register(Items.SHULKER_SHELL, minutes(12), 9); // Shells are farm-limited; slow cadence protects progression pacing.
-        register(Items.DRAGON_BREATH, minutes(15), 9); // Bottled dragon breath is semi-renewable but intentionally scarce.
-        register(Items.TOTEM_OF_UNDYING, minutes(20), 10); // Raid reward emulates raid effort before automation.
-        register(Items.NETHER_STAR, minutes(40), 16); // Boss trophy: extremely long interval reflects wither fight rarity.
+        // The End and other exotic drops (rarer trophies ask for fewer unlock items)
+        register(Items.END_STONE, minutes(2), 72);
+        register(Items.CHORUS_FRUIT, minutes(3), 64);
+        register(Items.SHULKER_SHELL, minutes(12), 16); // Shells are farm-limited; slow cadence protects progression pacing.
+        register(Items.DRAGON_BREATH, minutes(15), 12); // Bottled dragon breath is semi-renewable but intentionally scarce.
+        register(Items.TOTEM_OF_UNDYING, minutes(20), 8); // Raid reward emulates raid effort before automation.
+        register(Items.NETHER_STAR, minutes(40), 4); // Boss trophy: extremely long interval reflects wither fight rarity.
     }
 
     private GeneratorItems() {
