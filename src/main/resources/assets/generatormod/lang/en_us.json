@@ -4,6 +4,7 @@
   "screen.generatormod.select_item": "Select item to generate",
   "screen.generatormod.no_selection": "No item selected",
   "screen.generatormod.selected": "Selected Item",
+  "screen.generatormod.locked_detail": "Insert one item to unlock",
   "screen.generatormod.time_per_item": "Time per item: %s",
   "screen.generatormod.speed_level": "Speed Lv.%s (Cost: %s)",
   "screen.generatormod.quantity_level": "Quantity Lv.%s (Cost: %s)",
@@ -13,6 +14,7 @@
   "screen.generatormod.stored": "Stored items: %s",
   "screen.generatormod.next_in": "Next item in: %s",
   "screen.generatormod.elapsed": "Elapsed: %s",
+  "screen.generatormod.locked_entry": "%s (Locked)",
   "button.generatormod.execute": "Start",
   "button.generatormod.collect": "Collect",
   "button.generatormod.speed_upgrade": "Speed Upgrade",
@@ -25,5 +27,7 @@
   "message.generatormod.no_selection": "Select an item first",
   "message.generatormod.upgrade_missing_items": "Not enough items for upgrade",
   "message.generatormod.speed_upgraded": "Speed upgraded",
-  "message.generatormod.quantity_upgraded": "Yield upgraded"
+  "message.generatormod.quantity_upgraded": "Yield upgraded",
+  "message.generatormod.unlocked": "Generator unlocked",
+  "message.generatormod.unlock_missing_item": "Insert one item to unlock this generator"
 }

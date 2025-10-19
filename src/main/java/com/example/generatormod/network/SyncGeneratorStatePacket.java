@@ -7,6 +7,9 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class SyncGeneratorStatePacket {
@@ -21,11 +24,13 @@ public class SyncGeneratorStatePacket {
     private final long runningSince;
     private final long lastUpdate;
     private final long leftoverMillis;
+    private final Set<ResourceLocation> unlockedItems;
     private final String message;
 
     public SyncGeneratorStatePacket(boolean openScreen, ResourceLocation selectedItem, boolean running, long storedItems,
                                     int speedLevel, int quantityLevel, long intervalMillis, int amountPerCycle,
-                                    long runningSince, long lastUpdate, long leftoverMillis, String message) {
+                                    long runningSince, long lastUpdate, long leftoverMillis,
+                                    Collection<ResourceLocation> unlockedItems, String message) {
         this.openScreen = openScreen;
         this.selectedItem = selectedItem;
         this.running = running;
@@ -37,6 +42,7 @@ public class SyncGeneratorStatePacket {
         this.runningSince = runningSince;
         this.lastUpdate = lastUpdate;
         this.leftoverMillis = leftoverMillis;
+        this.unlockedItems = Set.copyOf(unlockedItems);
         this.message = message == null ? "" : message;
     }
 
@@ -53,8 +59,13 @@ public class SyncGeneratorStatePacket {
         long runningSince = buf.readVarLong();
         long lastUpdate = buf.readVarLong();
         long leftover = buf.readVarLong();
+        int unlockedSize = buf.readVarInt();
+        Set<ResourceLocation> unlocked = new HashSet<>();
+        for (int i = 0; i < unlockedSize; i++) {
+            unlocked.add(buf.readResourceLocation());
+        }
         String message = buf.readUtf(32767);
-        return new SyncGeneratorStatePacket(open, item, running, stored, speed, quantity, interval, amount, runningSince, lastUpdate, leftover, message);
+        return new SyncGeneratorStatePacket(open, item, running, stored, speed, quantity, interval, amount, runningSince, lastUpdate, leftover, unlocked, message);
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -72,6 +83,10 @@ public class SyncGeneratorStatePacket {
         buf.writeVarLong(runningSince);
         buf.writeVarLong(lastUpdate);
         buf.writeVarLong(leftoverMillis);
+        buf.writeVarInt(unlockedItems.size());
+        for (ResourceLocation id : unlockedItems) {
+            buf.writeResourceLocation(id);
+        }
         buf.writeUtf(message);
     }
 
@@ -80,7 +95,7 @@ public class SyncGeneratorStatePacket {
         context.enqueueWork(() -> {
             Minecraft minecraft = Minecraft.getInstance();
             ClientGeneratorState.INSTANCE.apply(selectedItem, running, storedItems, speedLevel, quantityLevel,
-                intervalMillis, amountPerCycle, runningSince, lastUpdate, leftoverMillis, message);
+                intervalMillis, amountPerCycle, runningSince, lastUpdate, leftoverMillis, unlockedItems, message);
             if (openScreen) {
                 minecraft.setScreen(new GeneratorScreen());
             } else if (minecraft.screen instanceof GeneratorScreen screen) {

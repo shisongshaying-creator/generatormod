@@ -1,15 +1,22 @@
 package com.example.generatormod.generator;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class GeneratorState {
     private static final String TAG_SELECTED = "Selected";
@@ -20,6 +27,7 @@ public class GeneratorState {
     private static final String TAG_LAST_REAL = "LastReal";
     private static final String TAG_LEFTOVER = "Leftover";
     private static final String TAG_RUNNING_SINCE = "RunningSince";
+    private static final String TAG_UNLOCKED = "Unlocked";
 
     private ResourceLocation selectedItem;
     private boolean running;
@@ -31,6 +39,7 @@ public class GeneratorState {
     private long runningSince;
     private boolean dirty;
     private String transientMessage = "";
+    private final Set<ResourceLocation> unlockedItems = new HashSet<>();
 
     public void load(CompoundTag tag) {
         selectedItem = tag.contains(TAG_SELECTED) ? new ResourceLocation(tag.getString(TAG_SELECTED)) : null;
@@ -41,6 +50,16 @@ public class GeneratorState {
         lastRealTime = tag.getLong(TAG_LAST_REAL);
         leftoverMillis = tag.getLong(TAG_LEFTOVER);
         runningSince = tag.getLong(TAG_RUNNING_SINCE);
+        unlockedItems.clear();
+        if (tag.contains(TAG_UNLOCKED)) {
+            ListTag listTag = tag.getList(TAG_UNLOCKED, Tag.TAG_STRING);
+            for (int i = 0; i < listTag.size(); i++) {
+                String value = listTag.getString(i);
+                if (!value.isEmpty()) {
+                    unlockedItems.add(new ResourceLocation(value));
+                }
+            }
+        }
         dirty = false;
     }
 
@@ -57,6 +76,11 @@ public class GeneratorState {
         tag.putLong(TAG_LAST_REAL, lastRealTime);
         tag.putLong(TAG_LEFTOVER, leftoverMillis);
         tag.putLong(TAG_RUNNING_SINCE, runningSince);
+        ListTag listTag = new ListTag();
+        for (ResourceLocation id : unlockedItems) {
+            listTag.add(StringTag.valueOf(id.toString()));
+        }
+        tag.put(TAG_UNLOCKED, listTag);
         dirty = false;
     }
 
@@ -88,7 +112,7 @@ public class GeneratorState {
         }
     }
 
-    public boolean start(ResourceLocation id, long now) {
+    public boolean start(ResourceLocation id, ServerPlayer player, long now) {
         if (running) {
             transientMessage = "already_running";
             return false;
@@ -98,13 +122,24 @@ public class GeneratorState {
             transientMessage = "invalid_item";
             return false;
         }
+        Item item = optionalItem.get();
+        boolean wasUnlocked = unlockedItems.contains(id);
+        if (!wasUnlocked) {
+            if (!consumeSingleItem(player, item)) {
+                transientMessage = "unlock_missing_item";
+                return false;
+            }
+            unlockedItems.add(id);
+            transientMessage = "unlocked";
+        } else {
+            transientMessage = "started";
+        }
         this.selectedItem = id;
         this.running = true;
         this.lastRealTime = now;
         this.leftoverMillis = 0L;
         this.runningSince = now;
         this.dirty = true;
-        transientMessage = "started";
         return true;
     }
 
@@ -255,6 +290,18 @@ public class GeneratorState {
         return false;
     }
 
+    private boolean consumeSingleItem(ServerPlayer player, Item item) {
+        for (ItemStack stack : player.getInventory().items) {
+            if (stack.isEmpty() || stack.getItem() != item) {
+                continue;
+            }
+            stack.shrink(1);
+            player.getInventory().setChanged();
+            return true;
+        }
+        return false;
+    }
+
     public int getSpeedUpgradeCost() {
         return getUpgradeCost(speedLevel);
     }
@@ -281,5 +328,13 @@ public class GeneratorState {
             remaining -= count;
         }
         return stacks;
+    }
+
+    public Set<ResourceLocation> getUnlockedItems() {
+        return Collections.unmodifiableSet(unlockedItems);
+    }
+
+    public boolean isUnlocked(ResourceLocation id) {
+        return unlockedItems.contains(id);
     }
 }
