@@ -126,6 +126,11 @@ public final class ClientGeneratorState {
         return Collections.unmodifiableMap(cloudStorage);
     }
 
+    public void updateCloudStorage(Map<ResourceLocation, Long> cloudStorage) {
+        this.cloudStorage.clear();
+        this.cloudStorage.putAll(cloudStorage);
+    }
+
     public long getCloudStored(ResourceLocation id) {
         if (id == null) {
             return 0L;

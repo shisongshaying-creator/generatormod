@@ -1,6 +1,7 @@
 package com.example.generatormod.client;
 
 import com.example.generatormod.network.GeneratorNetwork;
+import com.example.generatormod.network.RequestOpenCloudStoragePacket;
 import com.example.generatormod.network.RequestOpenGeneratorScreenPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -45,6 +46,9 @@ public final class ClientInitializer {
             }
             while (GeneratorKeyMappings.OPEN_GENERATOR.consumeClick()) {
                 GeneratorNetwork.CHANNEL.sendToServer(new RequestOpenGeneratorScreenPacket());
+            }
+            while (GeneratorKeyMappings.OPEN_CLOUD_STORAGE.consumeClick()) {
+                GeneratorNetwork.CHANNEL.sendToServer(new RequestOpenCloudStoragePacket());
             }
         }
     }

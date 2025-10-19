@@ -31,5 +31,10 @@
   "message.generatormod.speed_max_level": "Speed is already at maximum level",
   "message.generatormod.quantity_max_level": "Yield is already at maximum level",
   "message.generatormod.unlocked": "Generator unlocked",
-  "message.generatormod.unlock_missing_item": "Insert %s matching item(s) to unlock this generator"
+  "message.generatormod.unlock_missing_item": "Insert %s matching item(s) to unlock this generator",
+  "key.generatormod.open_cloud_storage": "Open Cloud Storage",
+  "screen.generatormod.cloud_storage": "Cloud Storage",
+  "screen.generatormod.cloud_storage_empty": "No items stored",
+  "screen.generatormod.cloud_storage_amount": "Stored: %s",
+  "button.generatormod.withdraw": "Withdraw"
 }

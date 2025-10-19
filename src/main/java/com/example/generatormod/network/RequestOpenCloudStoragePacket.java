@@ -8,9 +8,9 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public record CollectGeneratorPacket() {
-    public static CollectGeneratorPacket decode(FriendlyByteBuf buf) {
-        return new CollectGeneratorPacket();
+public record RequestOpenCloudStoragePacket() {
+    public static RequestOpenCloudStoragePacket decode(FriendlyByteBuf buf) {
+        return new RequestOpenCloudStoragePacket();
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -25,13 +25,8 @@ public record CollectGeneratorPacket() {
             }
             GeneratorState state = GeneratorDataManager.get(player);
             state.tick(System.currentTimeMillis());
-            long amount = state.collect();
-            state.depositToCloud(state.getSelectedItem(), amount);
             GeneratorDataManager.save(player);
-            String message = state.getTransientMessage();
-            GeneratorNetwork.syncToClient(player, state, false, message);
-            GeneratorNetwork.syncCloudStorage(player, state, false);
-            state.clearTransientMessage();
+            GeneratorNetwork.syncCloudStorage(player, state, true);
         });
         context.setPacketHandled(true);
     }
