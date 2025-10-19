@@ -80,7 +80,8 @@ public final class GeneratorNetwork {
             state.getUnlockedItems(),
             state.getSpeedLevels(),
             state.getQuantityLevels(),
-            message
+            message,
+            state.getCloudStorageSnapshot()
         );
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }

@@ -25,6 +25,7 @@ public final class ClientGeneratorState {
     private final Set<ResourceLocation> unlockedItems = new HashSet<>();
     private final Map<ResourceLocation, Integer> speedLevels = new HashMap<>();
     private final Map<ResourceLocation, Integer> quantityLevels = new HashMap<>();
+    private final Map<ResourceLocation, Long> cloudStorage = new HashMap<>();
 
     private ClientGeneratorState() {
     }
@@ -32,7 +33,8 @@ public final class ClientGeneratorState {
     public void apply(ResourceLocation selectedItem, boolean running, long storedItems, int speedLevel, int quantityLevel,
                       long intervalMillis, int amountPerCycle, long runningSince, long lastUpdate, long leftoverMillis,
                       Set<ResourceLocation> unlockedItems, Map<ResourceLocation, Integer> speedLevels,
-                      Map<ResourceLocation, Integer> quantityLevels, String message) {
+                      Map<ResourceLocation, Integer> quantityLevels, String message,
+                      Map<ResourceLocation, Long> cloudStorage) {
         this.selectedItem = selectedItem;
         this.running = running;
         this.storedItems = storedItems;
@@ -49,6 +51,8 @@ public final class ClientGeneratorState {
         this.speedLevels.putAll(speedLevels);
         this.quantityLevels.clear();
         this.quantityLevels.putAll(quantityLevels);
+        this.cloudStorage.clear();
+        this.cloudStorage.putAll(cloudStorage);
         this.message = message == null ? "" : message;
     }
 
@@ -116,6 +120,17 @@ public final class ClientGeneratorState {
 
     public Set<ResourceLocation> getUnlockedItems() {
         return Collections.unmodifiableSet(unlockedItems);
+    }
+
+    public Map<ResourceLocation, Long> getCloudStorage() {
+        return Collections.unmodifiableMap(cloudStorage);
+    }
+
+    public long getCloudStored(ResourceLocation id) {
+        if (id == null) {
+            return 0L;
+        }
+        return cloudStorage.getOrDefault(id, 0L);
     }
 
     public DisplayState computeDisplayState(long now) {

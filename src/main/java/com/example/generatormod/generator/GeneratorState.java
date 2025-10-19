@@ -30,6 +30,8 @@ public class GeneratorState {
     private static final String TAG_QUANTITY_LEVELS = "QuantityLevels";
     private static final String TAG_LEVEL_ITEM = "Item";
     private static final String TAG_LEVEL_VALUE = "Level";
+    private static final String TAG_CLOUD_STORAGE = "CloudStorage";
+    private static final String TAG_CLOUD_AMOUNT = "Amount";
     private static final String TAG_LAST_REAL = "LastReal";
     private static final String TAG_LEFTOVER = "Leftover";
     private static final String TAG_RUNNING_SINCE = "RunningSince";
@@ -42,6 +44,7 @@ public class GeneratorState {
     private long storedItems;
     private final Map<ResourceLocation, Integer> speedLevels = new HashMap<>();
     private final Map<ResourceLocation, Integer> quantityLevels = new HashMap<>();
+    private final Map<ResourceLocation, Long> cloudStorage = new HashMap<>();
     private long lastRealTime;
     private long leftoverMillis;
     private long runningSince;
@@ -55,6 +58,7 @@ public class GeneratorState {
         storedItems = tag.getLong(TAG_STORED);
         speedLevels.clear();
         quantityLevels.clear();
+        cloudStorage.clear();
         if (tag.contains(TAG_SPEED_LEVELS, Tag.TAG_LIST)) {
             ListTag speedList = tag.getList(TAG_SPEED_LEVELS, Tag.TAG_COMPOUND);
             for (int i = 0; i < speedList.size(); i++) {
@@ -80,6 +84,20 @@ public class GeneratorState {
                 int level = Mth.clamp(levelTag.getInt(TAG_LEVEL_VALUE), 0, MAX_LEVEL);
                 if (level > 0) {
                     quantityLevels.put(new ResourceLocation(idValue), level);
+                }
+            }
+        }
+        if (tag.contains(TAG_CLOUD_STORAGE, Tag.TAG_LIST)) {
+            ListTag cloudList = tag.getList(TAG_CLOUD_STORAGE, Tag.TAG_COMPOUND);
+            for (int i = 0; i < cloudList.size(); i++) {
+                CompoundTag entryTag = cloudList.getCompound(i);
+                String idValue = entryTag.getString(TAG_LEVEL_ITEM);
+                if (idValue.isEmpty()) {
+                    continue;
+                }
+                long amount = Math.max(0L, entryTag.getLong(TAG_CLOUD_AMOUNT));
+                if (amount > 0L) {
+                    cloudStorage.put(new ResourceLocation(idValue), amount);
                 }
             }
         }
@@ -151,6 +169,18 @@ public class GeneratorState {
             listTag.add(StringTag.valueOf(id.toString()));
         }
         tag.put(TAG_UNLOCKED, listTag);
+        ListTag cloudList = new ListTag();
+        for (Map.Entry<ResourceLocation, Long> entry : cloudStorage.entrySet()) {
+            long amount = entry.getValue();
+            if (amount <= 0L) {
+                continue;
+            }
+            CompoundTag entryTag = new CompoundTag();
+            entryTag.putString(TAG_LEVEL_ITEM, entry.getKey().toString());
+            entryTag.putLong(TAG_CLOUD_AMOUNT, amount);
+            cloudList.add(entryTag);
+        }
+        tag.put(TAG_CLOUD_STORAGE, cloudList);
         dirty = false;
     }
 
@@ -409,15 +439,67 @@ public class GeneratorState {
         return 4 + level * 3;
     }
 
-    public List<ItemStack> createItemStacks(long amount) {
-        Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
-        if (optionalItem.isEmpty() || amount <= 0) {
+    public long depositToCloud(ResourceLocation id, long amount) {
+        if (id == null || amount <= 0L) {
+            return 0L;
+        }
+        Optional<Item> optionalItem = GeneratorItems.resolve(id);
+        if (optionalItem.isEmpty()) {
+            return 0L;
+        }
+        long current = cloudStorage.getOrDefault(id, 0L);
+        long deposited;
+        try {
+            deposited = Math.addExact(current, amount);
+        } catch (ArithmeticException e) {
+            deposited = Long.MAX_VALUE;
+        }
+        cloudStorage.put(id, deposited);
+        dirty = true;
+        return deposited - current;
+    }
+
+    public List<ItemStack> withdrawFromCloud(ResourceLocation id, long requestedAmount) {
+        if (id == null || requestedAmount <= 0L) {
             return List.of();
         }
-        Item item = optionalItem.get();
+        Optional<Item> optionalItem = GeneratorItems.resolve(id);
+        if (optionalItem.isEmpty()) {
+            return List.of();
+        }
+        long available = cloudStorage.getOrDefault(id, 0L);
+        long toWithdraw = Math.min(available, requestedAmount);
+        if (toWithdraw <= 0L) {
+            return List.of();
+        }
+        long remaining = available - toWithdraw;
+        if (remaining > 0L) {
+            cloudStorage.put(id, remaining);
+        } else {
+            cloudStorage.remove(id);
+        }
+        dirty = true;
+        return createItemStacks(optionalItem.get(), toWithdraw);
+    }
+
+    public Map<ResourceLocation, Long> getCloudStorageSnapshot() {
+        return Collections.unmodifiableMap(new HashMap<>(cloudStorage));
+    }
+
+    public long getCloudStored(ResourceLocation id) {
+        if (id == null) {
+            return 0L;
+        }
+        return cloudStorage.getOrDefault(id, 0L);
+    }
+
+    private List<ItemStack> createItemStacks(Item item, long amount) {
+        if (amount <= 0L) {
+            return List.of();
+        }
         List<ItemStack> stacks = new ArrayList<>();
         long remaining = amount;
-        while (remaining > 0) {
+        while (remaining > 0L) {
             int count = (int) Math.min(item.getMaxStackSize(), remaining);
             stacks.add(new ItemStack(item, count));
             remaining -= count;

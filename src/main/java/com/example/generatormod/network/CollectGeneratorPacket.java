@@ -4,11 +4,8 @@ import com.example.generatormod.generator.GeneratorDataManager;
 import com.example.generatormod.generator.GeneratorState;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 public record CollectGeneratorPacket() {
@@ -29,10 +26,7 @@ public record CollectGeneratorPacket() {
             GeneratorState state = GeneratorDataManager.get(player);
             state.tick(System.currentTimeMillis());
             long amount = state.collect();
-            List<ItemStack> stacks = state.createItemStacks(amount);
-            for (ItemStack stack : stacks) {
-                ItemHandlerHelper.giveItemToPlayer(player, stack);
-            }
+            state.depositToCloud(state.getSelectedItem(), amount);
             GeneratorDataManager.save(player);
             String message = state.getTransientMessage();
             GeneratorNetwork.syncToClient(player, state, false, message);
