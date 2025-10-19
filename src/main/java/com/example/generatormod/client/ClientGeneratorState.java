@@ -78,4 +78,25 @@ public final class ClientGeneratorState {
     public String getMessage() {
         return message;
     }
+
+    public DisplayState computeDisplayState(long now) {
+        long displayStored = this.storedItems;
+        long displayElapsed = this.leftoverMillis;
+
+        if (this.running && this.intervalMillis > 0L) {
+            long elapsedSinceUpdate = Math.max(0L, now - this.lastUpdate);
+            long totalElapsed = this.leftoverMillis + elapsedSinceUpdate;
+            long cycles = totalElapsed / this.intervalMillis;
+            displayElapsed = totalElapsed % this.intervalMillis;
+
+            if (this.amountPerCycle > 0 && cycles > 0) {
+                displayStored += cycles * (long) this.amountPerCycle;
+            }
+        }
+
+        return new DisplayState(displayStored, displayElapsed);
+    }
+
+    public record DisplayState(long storedItems, long elapsedInCycleMillis) {
+    }
 }
