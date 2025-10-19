@@ -9,6 +9,8 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 import net.minecraftforge.network.NetworkRegistry;
 
+import java.util.Map;
+
 public final class GeneratorNetwork {
     private static final String PROTOCOL_VERSION = "1";
     public static SimpleChannel CHANNEL;
@@ -32,6 +34,12 @@ public final class GeneratorNetwork {
             .consumerMainThread(RequestOpenGeneratorScreenPacket::handle)
             .add();
 
+        CHANNEL.messageBuilder(RequestOpenCloudStoragePacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+            .decoder(RequestOpenCloudStoragePacket::decode)
+            .encoder(RequestOpenCloudStoragePacket::encode)
+            .consumerMainThread(RequestOpenCloudStoragePacket::handle)
+            .add();
+
         CHANNEL.messageBuilder(ExecuteGeneratorPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
             .decoder(ExecuteGeneratorPacket::decode)
             .encoder(ExecuteGeneratorPacket::encode)
@@ -42,6 +50,12 @@ public final class GeneratorNetwork {
             .decoder(CollectGeneratorPacket::decode)
             .encoder(CollectGeneratorPacket::encode)
             .consumerMainThread(CollectGeneratorPacket::handle)
+            .add();
+
+        CHANNEL.messageBuilder(WithdrawCloudStoragePacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+            .decoder(WithdrawCloudStoragePacket::decode)
+            .encoder(WithdrawCloudStoragePacket::encode)
+            .consumerMainThread(WithdrawCloudStoragePacket::handle)
             .add();
 
         CHANNEL.messageBuilder(UpgradeGeneratorPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
@@ -55,10 +69,22 @@ public final class GeneratorNetwork {
             .encoder(SyncGeneratorStatePacket::encode)
             .consumerMainThread(SyncGeneratorStatePacket::handle)
             .add();
+
+        CHANNEL.messageBuilder(SyncCloudStoragePacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+            .decoder(SyncCloudStoragePacket::decode)
+            .encoder(SyncCloudStoragePacket::encode)
+            .consumerMainThread(SyncCloudStoragePacket::handle)
+            .add();
     }
 
     private static int nextId() {
         return packetId++;
+    }
+
+    public static void syncCloudStorage(ServerPlayer player, GeneratorState state, boolean openScreen) {
+        Map<ResourceLocation, Long> snapshot = state.getCloudStorageSnapshot();
+        SyncCloudStoragePacket packet = new SyncCloudStoragePacket(openScreen, snapshot);
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
 
     public static void syncToClient(ServerPlayer player, GeneratorState state, boolean openScreen, String message) {

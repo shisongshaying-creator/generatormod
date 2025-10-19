@@ -14,7 +14,15 @@ public final class GeneratorKeyMappings {
         "key.categories.inventory"
     );
 
+    public static final KeyMapping OPEN_CLOUD_STORAGE = new KeyMapping(
+        "key." + GeneratorMod.MODID + ".open_cloud_storage",
+        GLFW.GLFW_KEY_K,
+        "key.categories.inventory"
+    );
+
     static void register(RegisterKeyMappingsEvent event) {
         event.register(OPEN_GENERATOR);
+        event.register(OPEN_CLOUD_STORAGE);
     }
 }
+
