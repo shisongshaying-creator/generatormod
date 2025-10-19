@@ -91,10 +91,11 @@ public class GeneratorScreen extends Screen {
     private void updateButtons() {
         ClientGeneratorState state = ClientGeneratorState.INSTANCE;
         boolean hasSelection = this.selectedItem != null;
+        boolean unlocked = hasSelection && state.isUnlocked(this.selectedItem);
         this.executeButton.active = hasSelection && !state.isRunning();
         this.collectButton.active = state.isRunning() || state.getStoredItems() > 0;
-        this.speedButton.active = hasSelection;
-        this.quantityButton.active = hasSelection;
+        this.speedButton.active = unlocked;
+        this.quantityButton.active = unlocked;
     }
 
     @Override
@@ -136,9 +137,18 @@ public class GeneratorScreen extends Screen {
             }
         }
 
-        graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".selected"),
-                left, top, 0xFFFFFF, false);
-        graphics.drawString(this.font, name, left, top + 12, 0xEEEEEE, false);
+        graphics.drawString(this.font, Component.translatable("screen." + GeneratorMod.MODID + ".selected"), left, top, 0xFFFFFF, false);
+        int lineY = top + 12;
+        graphics.drawString(this.font, name, left, lineY, 0xEEEEEE, false);
+        lineY += 18;
+
+        boolean locked = selectedItem != null && !state.isUnlocked(selectedItem);
+        if (locked) {
+            graphics.drawString(this.font,
+                    Component.translatable("screen." + GeneratorMod.MODID + ".locked_detail"),
+                    left, lineY, 0xFF6666, false);
+            lineY += 14;
+        }
 
         long interval = (selectedItem != null && item != null)
                 ? GeneratorItems.computeIntervalMillis(item, state.getSpeedLevel())
@@ -148,9 +158,9 @@ public class GeneratorScreen extends Screen {
 
         graphics.drawString(this.font,
                 Component.translatable("screen." + GeneratorMod.MODID + ".time_per_item", formatDuration(perItem)),
-                left, top + 30, 0xFFFFFF, false);
+                left, lineY, 0xFFFFFF, false);
 
-        int lineY = top + 50;
+        lineY += 20;
         graphics.drawString(this.font,
                 Component.translatable("screen." + GeneratorMod.MODID + ".speed_level", state.getSpeedLevel(), getUpgradeCost(state.getSpeedLevel())),
                 left, lineY, 0xC0C0C0, false);
@@ -304,11 +314,13 @@ public class GeneratorScreen extends Screen {
         private final Item item;
         private final ResourceLocation id;
         private final Component name;
+        private final Component lockedName;
 
         private ItemEntry(Item item) {
             this.item = item;
             this.id = BuiltInRegistries.ITEM.getKey(item);
             this.name = item.getDescription();
+            this.lockedName = Component.translatable("screen." + GeneratorMod.MODID + ".locked_entry", this.name);
         }
 
         @Override
@@ -316,8 +328,15 @@ public class GeneratorScreen extends Screen {
                            int mouseX, int mouseY, boolean hovered, float partialTick) {
             boolean selected = GeneratorScreen.this.selectedItem != null
                     && GeneratorScreen.this.selectedItem.equals(this.id);
-            int textColor = (hovered || selected) ? 0xFFFFFF : 0xC0C0C0;
-            graphics.drawString(GeneratorScreen.this.font, this.name, left + 4, top + 6, textColor, false);
+            boolean unlocked = ClientGeneratorState.INSTANCE.isUnlocked(this.id);
+            Component displayName = unlocked ? this.name : this.lockedName;
+            int textColor;
+            if (unlocked) {
+                textColor = (hovered || selected) ? 0xFFFFFF : 0xC0C0C0;
+            } else {
+                textColor = (hovered || selected) ? 0xFFAAAA : 0xFF6666;
+            }
+            graphics.drawString(GeneratorScreen.this.font, displayName, left + 4, top + 6, textColor, false);
         }
 
         @Override

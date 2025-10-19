@@ -35,7 +35,7 @@ public class ExecuteGeneratorPacket {
             GeneratorState state = GeneratorDataManager.get(player);
             long now = System.currentTimeMillis();
             state.tick(now);
-            state.start(itemId, now);
+            state.start(itemId, player, now);
             GeneratorDataManager.save(player);
             String message = state.getTransientMessage();
             GeneratorNetwork.syncToClient(player, state, false, message);

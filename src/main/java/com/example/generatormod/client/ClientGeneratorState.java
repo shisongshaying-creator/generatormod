@@ -2,6 +2,10 @@ package com.example.generatormod.client;
 
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public final class ClientGeneratorState {
     public static final ClientGeneratorState INSTANCE = new ClientGeneratorState();
 
@@ -16,12 +20,14 @@ public final class ClientGeneratorState {
     private long lastUpdate;
     private long leftoverMillis;
     private String message = "";
+    private final Set<ResourceLocation> unlockedItems = new HashSet<>();
 
     private ClientGeneratorState() {
     }
 
     public void apply(ResourceLocation selectedItem, boolean running, long storedItems, int speedLevel, int quantityLevel,
-                      long intervalMillis, int amountPerCycle, long runningSince, long lastUpdate, long leftoverMillis, String message) {
+                      long intervalMillis, int amountPerCycle, long runningSince, long lastUpdate, long leftoverMillis,
+                      Set<ResourceLocation> unlockedItems, String message) {
         this.selectedItem = selectedItem;
         this.running = running;
         this.storedItems = storedItems;
@@ -32,6 +38,8 @@ public final class ClientGeneratorState {
         this.runningSince = runningSince;
         this.lastUpdate = lastUpdate;
         this.leftoverMillis = leftoverMillis;
+        this.unlockedItems.clear();
+        this.unlockedItems.addAll(unlockedItems);
         this.message = message == null ? "" : message;
     }
 
@@ -77,6 +85,14 @@ public final class ClientGeneratorState {
 
     public String getMessage() {
         return message;
+    }
+
+    public boolean isUnlocked(ResourceLocation id) {
+        return id != null && unlockedItems.contains(id);
+    }
+
+    public Set<ResourceLocation> getUnlockedItems() {
+        return Collections.unmodifiableSet(unlockedItems);
     }
 
     public DisplayState computeDisplayState(long now) {

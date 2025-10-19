@@ -77,6 +77,7 @@ public final class GeneratorNetwork {
             state.getRunningSince(),
             state.getLastRealTime(),
             state.getLeftoverMillis(),
+            state.getUnlockedItems(),
             message
         );
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
