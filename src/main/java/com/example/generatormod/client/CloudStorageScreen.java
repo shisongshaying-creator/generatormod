@@ -15,7 +15,6 @@ import net.minecraft.world.item.Item;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public class CloudStorageScreen extends Screen {
@@ -98,12 +97,10 @@ public class CloudStorageScreen extends Screen {
         GeneratorNetwork.CHANNEL.sendToServer(new WithdrawCloudStoragePacket(id, Long.MAX_VALUE));
     }
 
-    private String formatCount(long amount) {
-        return String.format(Locale.ROOT, "%,d", amount);
-    }
-
     private Component getAmountComponent(long amount) {
-        return Component.translatable("screen." + GeneratorMod.MODID + ".cloud_storage_amount", formatCount(amount));
+        return Component.translatable(
+                "screen." + GeneratorMod.MODID + ".cloud_storage_amount",
+                NumberFormatUtil.formatCount(amount));
     }
 
     private Component getItemName(ResourceLocation id) {

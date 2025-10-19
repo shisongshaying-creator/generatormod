@@ -186,7 +186,9 @@ public class GeneratorScreen extends Screen {
                 state.isRunning()
                         ? Component.translatable("screen." + GeneratorMod.MODID + ".running")
                         : Component.translatable("screen." + GeneratorMod.MODID + ".stopped"));
-        Component storedComponent = Component.translatable("screen." + GeneratorMod.MODID + ".stored", displayState.storedItems());
+        Component storedComponent = Component.translatable(
+                "screen." + GeneratorMod.MODID + ".stored",
+                NumberFormatUtil.formatCount(displayState.storedItems()));
 
         boolean hasNextIn = state.isRunning() && state.getIntervalMillis() > 0;
         Component nextComponent = hasNextIn
