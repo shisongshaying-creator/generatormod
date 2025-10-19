@@ -29,6 +29,8 @@ public class GeneratorState {
     private static final String TAG_RUNNING_SINCE = "RunningSince";
     private static final String TAG_UNLOCKED = "Unlocked";
 
+    public static final int MAX_LEVEL = 10;
+
     private ResourceLocation selectedItem;
     private boolean running;
     private long storedItems;
@@ -233,6 +235,11 @@ public class GeneratorState {
             transientMessage = "no_selection";
             return false;
         }
+        if (speedLevel >= MAX_LEVEL) {
+            transientMessage = "speed_max_level";
+            return false;
+        }
+
         int cost = getUpgradeCost(speedLevel);
         Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
         if (optionalItem.isEmpty()) {
@@ -243,7 +250,7 @@ public class GeneratorState {
             transientMessage = "upgrade_missing_items";
             return false;
         }
-        speedLevel = Mth.clamp(speedLevel + 1, 0, 10);
+        speedLevel = Mth.clamp(speedLevel + 1, 0, MAX_LEVEL);
         dirty = true;
         transientMessage = "speed_upgraded";
         return true;
@@ -254,6 +261,11 @@ public class GeneratorState {
             transientMessage = "no_selection";
             return false;
         }
+        if (quantityLevel >= MAX_LEVEL) {
+            transientMessage = "quantity_max_level";
+            return false;
+        }
+
         int cost = getUpgradeCost(quantityLevel);
         Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
         if (optionalItem.isEmpty()) {
@@ -264,7 +276,7 @@ public class GeneratorState {
             transientMessage = "upgrade_missing_items";
             return false;
         }
-        quantityLevel = Mth.clamp(quantityLevel + 1, 0, 10);
+        quantityLevel = Mth.clamp(quantityLevel + 1, 0, MAX_LEVEL);
         dirty = true;
         transientMessage = "quantity_upgraded";
         return true;

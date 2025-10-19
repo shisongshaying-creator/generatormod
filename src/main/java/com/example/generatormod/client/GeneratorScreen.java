@@ -2,6 +2,7 @@ package com.example.generatormod.client;
 
 import com.example.generatormod.GeneratorMod;
 import com.example.generatormod.generator.GeneratorItems;
+import com.example.generatormod.generator.GeneratorState;
 import com.example.generatormod.network.CollectGeneratorPacket;
 import com.example.generatormod.network.ExecuteGeneratorPacket;
 import com.example.generatormod.network.GeneratorNetwork;
@@ -94,8 +95,10 @@ public class GeneratorScreen extends Screen {
         boolean unlocked = hasSelection && state.isUnlocked(this.selectedItem);
         this.executeButton.active = hasSelection && !state.isRunning();
         this.collectButton.active = state.isRunning() || state.getStoredItems() > 0;
-        this.speedButton.active = unlocked;
-        this.quantityButton.active = unlocked;
+        boolean canUpgradeSpeed = unlocked && state.getSpeedLevel() < GeneratorState.MAX_LEVEL;
+        boolean canUpgradeQuantity = unlocked && state.getQuantityLevel() < GeneratorState.MAX_LEVEL;
+        this.speedButton.active = canUpgradeSpeed;
+        this.quantityButton.active = canUpgradeQuantity;
     }
 
     @Override
