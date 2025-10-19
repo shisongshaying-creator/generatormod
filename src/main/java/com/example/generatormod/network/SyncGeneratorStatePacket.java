@@ -30,6 +30,7 @@ public class SyncGeneratorStatePacket {
     private final Map<ResourceLocation, Integer> speedLevels;
     private final Map<ResourceLocation, Integer> quantityLevels;
     private final String message;
+    private final Map<ResourceLocation, Long> cloudStorage;
 
     public SyncGeneratorStatePacket(boolean openScreen, ResourceLocation selectedItem, boolean running, long storedItems,
                                     int speedLevel, int quantityLevel, long intervalMillis, int amountPerCycle,
@@ -37,7 +38,8 @@ public class SyncGeneratorStatePacket {
                                     Collection<ResourceLocation> unlockedItems,
                                     Map<ResourceLocation, Integer> speedLevels,
                                     Map<ResourceLocation, Integer> quantityLevels,
-                                    String message) {
+                                    String message,
+                                    Map<ResourceLocation, Long> cloudStorage) {
         this.openScreen = openScreen;
         this.selectedItem = selectedItem;
         this.running = running;
@@ -53,6 +55,7 @@ public class SyncGeneratorStatePacket {
         this.speedLevels = Map.copyOf(speedLevels);
         this.quantityLevels = Map.copyOf(quantityLevels);
         this.message = message == null ? "" : message;
+        this.cloudStorage = Map.copyOf(cloudStorage);
     }
 
     public static SyncGeneratorStatePacket decode(FriendlyByteBuf buf) {
@@ -87,8 +90,15 @@ public class SyncGeneratorStatePacket {
             int level = buf.readVarInt();
             quantityLevels.put(id, level);
         }
+        int cloudSize = buf.readVarInt();
+        Map<ResourceLocation, Long> cloudStorage = new HashMap<>();
+        for (int i = 0; i < cloudSize; i++) {
+            ResourceLocation id = buf.readResourceLocation();
+            long amount = buf.readVarLong();
+            cloudStorage.put(id, amount);
+        }
         String message = buf.readUtf(32767);
-        return new SyncGeneratorStatePacket(open, item, running, stored, speed, quantity, interval, amount, runningSince, lastUpdate, leftover, unlocked, speedLevels, quantityLevels, message);
+        return new SyncGeneratorStatePacket(open, item, running, stored, speed, quantity, interval, amount, runningSince, lastUpdate, leftover, unlocked, speedLevels, quantityLevels, message, cloudStorage);
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -120,6 +130,11 @@ public class SyncGeneratorStatePacket {
             buf.writeResourceLocation(entry.getKey());
             buf.writeVarInt(entry.getValue());
         }
+        buf.writeVarInt(cloudStorage.size());
+        for (Map.Entry<ResourceLocation, Long> entry : cloudStorage.entrySet()) {
+            buf.writeResourceLocation(entry.getKey());
+            buf.writeVarLong(entry.getValue());
+        }
         buf.writeUtf(message);
     }
 
@@ -129,7 +144,7 @@ public class SyncGeneratorStatePacket {
             Minecraft minecraft = Minecraft.getInstance();
             ClientGeneratorState.INSTANCE.apply(selectedItem, running, storedItems, speedLevel, quantityLevel,
                 intervalMillis, amountPerCycle, runningSince, lastUpdate, leftoverMillis, unlockedItems,
-                speedLevels, quantityLevels, message);
+                speedLevels, quantityLevels, message, cloudStorage);
             if (openScreen) {
                 minecraft.setScreen(new GeneratorScreen());
             } else if (minecraft.screen instanceof GeneratorScreen screen) {
