@@ -145,6 +145,29 @@ public class CloudStorageScreen extends Screen {
         public boolean isEmpty() {
             return this.children().isEmpty();
         }
+
+        public boolean handleEntryClick(CloudStorageEntry entry, double mouseX, double mouseY) {
+            int index = this.children().indexOf(entry);
+            if (index < 0) {
+                return false;
+            }
+
+            int left = this.getLeft();
+            int rowTop = this.getRowTop(index);
+            int rowBottom = this.getRowBottom(index);
+            int rowHeight = rowBottom - rowTop;
+
+            int buttonLeft = left + LIST_WIDTH - BUTTON_WIDTH - 6;
+            int buttonTop = rowTop + Math.max(0, (rowHeight - BUTTON_HEIGHT) / 2);
+
+            if (mouseX >= buttonLeft && mouseX <= buttonLeft + BUTTON_WIDTH
+                    && mouseY >= buttonTop && mouseY <= buttonTop + BUTTON_HEIGHT) {
+                withdraw(entry.getId());
+                return true;
+            }
+
+            return false;
+        }
     }
 
     private class CloudStorageEntry extends ObjectSelectionList.Entry<CloudStorageEntry> {
@@ -181,21 +204,7 @@ public class CloudStorageScreen extends Screen {
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if (button == 0) {
-                int left = CloudStorageScreen.this.storageList.getLeft();
-                int topIndex = CloudStorageScreen.this.storageList.children().indexOf(this);
-                if (topIndex < 0) {
-                    return false;
-                }
-                int top = CloudStorageScreen.this.storageList.getRowTop(topIndex);
-                int rowBottom = CloudStorageScreen.this.storageList.getRowBottom(topIndex);
-                int rowHeight = rowBottom - top;
-                int buttonLeft = left + LIST_WIDTH - BUTTON_WIDTH - 6;
-                int buttonTop = top + Math.max(0, (rowHeight - BUTTON_HEIGHT) / 2);
-                if (mouseX >= buttonLeft && mouseX <= buttonLeft + BUTTON_WIDTH
-                        && mouseY >= buttonTop && mouseY <= buttonTop + BUTTON_HEIGHT) {
-                    withdraw(this.id);
-                    return true;
-                }
+                return CloudStorageScreen.this.storageList.handleEntryClick(this, mouseX, mouseY);
             }
             return false;
         }
