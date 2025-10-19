@@ -94,8 +94,8 @@ public class SyncGeneratorStatePacket {
         Map<ResourceLocation, Long> cloudStorage = new HashMap<>();
         for (int i = 0; i < cloudSize; i++) {
             ResourceLocation id = buf.readResourceLocation();
-            long amount = buf.readVarLong();
-            cloudStorage.put(id, amount);
+            long storedAmount = buf.readVarLong();
+            cloudStorage.put(id, storedAmount);
         }
         String message = buf.readUtf(32767);
         return new SyncGeneratorStatePacket(open, item, running, stored, speed, quantity, interval, amount, runningSince, lastUpdate, leftover, unlocked, speedLevels, quantityLevels, message, cloudStorage);
