@@ -4,7 +4,7 @@
   "screen.generatormod.select_item": "生成するアイテムを選択",
   "screen.generatormod.no_selection": "未選択",
   "screen.generatormod.selected": "選択中のアイテム",
-  "screen.generatormod.locked_detail": "未解放: 同じアイテムを1個投入すると解放されます",
+  "screen.generatormod.locked_detail": "未解放: 同じアイテムを%s個投入すると解放されます",
   "screen.generatormod.time_per_item": "1個あたりの時間: %s",
   "screen.generatormod.speed_level": "速度 Lv.%s (必要: %s個)",
   "screen.generatormod.quantity_level": "生成量 Lv.%s (必要: %s個)",
@@ -29,5 +29,5 @@
   "message.generatormod.speed_upgraded": "生成速度を強化しました",
   "message.generatormod.quantity_upgraded": "生成量を強化しました",
   "message.generatormod.unlocked": "ジェネレーターを解放しました",
-  "message.generatormod.unlock_missing_item": "解放には同じアイテムが1個必要です"
+  "message.generatormod.unlock_missing_item": "解放には同じアイテムが%s個必要です"
 }

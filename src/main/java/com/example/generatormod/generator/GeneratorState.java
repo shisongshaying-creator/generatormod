@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class GeneratorState {
+    public static final int UNLOCK_COST = 4;
     private static final String TAG_SELECTED = "Selected";
     private static final String TAG_RUNNING = "Running";
     private static final String TAG_STORED = "Stored";
@@ -125,7 +126,7 @@ public class GeneratorState {
         Item item = optionalItem.get();
         boolean wasUnlocked = unlockedItems.contains(id);
         if (!wasUnlocked) {
-            if (!consumeSingleItem(player, item)) {
+            if (!consumeItems(player, item, UNLOCK_COST)) {
                 transientMessage = "unlock_missing_item";
                 return false;
             }
@@ -233,7 +234,12 @@ public class GeneratorState {
             return false;
         }
         int cost = getUpgradeCost(speedLevel);
-        if (!consumeItems(player, cost)) {
+        Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
+        if (optionalItem.isEmpty()) {
+            transientMessage = "invalid_item";
+            return false;
+        }
+        if (!consumeItems(player, optionalItem.get(), cost)) {
             transientMessage = "upgrade_missing_items";
             return false;
         }
@@ -249,7 +255,12 @@ public class GeneratorState {
             return false;
         }
         int cost = getUpgradeCost(quantityLevel);
-        if (!consumeItems(player, cost)) {
+        Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
+        if (optionalItem.isEmpty()) {
+            transientMessage = "invalid_item";
+            return false;
+        }
+        if (!consumeItems(player, optionalItem.get(), cost)) {
             transientMessage = "upgrade_missing_items";
             return false;
         }
@@ -259,12 +270,7 @@ public class GeneratorState {
         return true;
     }
 
-    private boolean consumeItems(Player player, int cost) {
-        Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
-        if (optionalItem.isEmpty()) {
-            return false;
-        }
-        Item item = optionalItem.get();
+    private boolean consumeItems(Player player, Item item, int cost) {
         int available = 0;
         for (ItemStack stack : player.getInventory().items) {
             if (!stack.isEmpty() && stack.getItem() == item) {
@@ -286,18 +292,6 @@ public class GeneratorState {
                 player.getInventory().setChanged();
                 return true;
             }
-        }
-        return false;
-    }
-
-    private boolean consumeSingleItem(ServerPlayer player, Item item) {
-        for (ItemStack stack : player.getInventory().items) {
-            if (stack.isEmpty() || stack.getItem() != item) {
-                continue;
-            }
-            stack.shrink(1);
-            player.getInventory().setChanged();
-            return true;
         }
         return false;
     }
