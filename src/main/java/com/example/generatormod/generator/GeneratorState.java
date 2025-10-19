@@ -234,6 +234,14 @@ public class GeneratorState {
         return getQuantityLevel(selectedItem);
     }
 
+    public Map<ResourceLocation, Integer> getSpeedLevels() {
+        return Collections.unmodifiableMap(speedLevels);
+    }
+
+    public Map<ResourceLocation, Integer> getQuantityLevels() {
+        return Collections.unmodifiableMap(quantityLevels);
+    }
+
     public long getIntervalMillis() {
         if (selectedItem == null) {
             return 0L;
@@ -300,18 +308,22 @@ public class GeneratorState {
     }
 
     public boolean upgradeSpeed(Player player) {
-        if (selectedItem == null) {
+        return upgradeSpeed(player, selectedItem);
+    }
+
+    public boolean upgradeSpeed(Player player, ResourceLocation id) {
+        if (id == null) {
             transientMessage = "no_selection";
             return false;
         }
-        int currentLevel = getSpeedLevel(selectedItem);
+        int currentLevel = getSpeedLevel(id);
         if (currentLevel >= MAX_LEVEL) {
             transientMessage = "speed_max_level";
             return false;
         }
 
         int cost = getUpgradeCost(currentLevel);
-        Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
+        Optional<Item> optionalItem = GeneratorItems.resolve(id);
         if (optionalItem.isEmpty()) {
             transientMessage = "invalid_item";
             return false;
@@ -321,25 +333,29 @@ public class GeneratorState {
             return false;
         }
         int newLevel = Mth.clamp(currentLevel + 1, 0, MAX_LEVEL);
-        setSpeedLevel(selectedItem, newLevel);
+        setSpeedLevel(id, newLevel);
         dirty = true;
         transientMessage = "speed_upgraded";
         return true;
     }
 
     public boolean upgradeQuantity(Player player) {
-        if (selectedItem == null) {
+        return upgradeQuantity(player, selectedItem);
+    }
+
+    public boolean upgradeQuantity(Player player, ResourceLocation id) {
+        if (id == null) {
             transientMessage = "no_selection";
             return false;
         }
-        int currentLevel = getQuantityLevel(selectedItem);
+        int currentLevel = getQuantityLevel(id);
         if (currentLevel >= MAX_LEVEL) {
             transientMessage = "quantity_max_level";
             return false;
         }
 
         int cost = getUpgradeCost(currentLevel);
-        Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
+        Optional<Item> optionalItem = GeneratorItems.resolve(id);
         if (optionalItem.isEmpty()) {
             transientMessage = "invalid_item";
             return false;
@@ -349,7 +365,7 @@ public class GeneratorState {
             return false;
         }
         int newLevel = Mth.clamp(currentLevel + 1, 0, MAX_LEVEL);
-        setQuantityLevel(selectedItem, newLevel);
+        setQuantityLevel(id, newLevel);
         dirty = true;
         transientMessage = "quantity_upgraded";
         return true;
@@ -417,7 +433,7 @@ public class GeneratorState {
         return unlockedItems.contains(id);
     }
 
-    private int getSpeedLevel(ResourceLocation id) {
+    public int getSpeedLevel(ResourceLocation id) {
         if (id == null) {
             return 0;
         }
@@ -435,7 +451,7 @@ public class GeneratorState {
         }
     }
 
-    private int getQuantityLevel(ResourceLocation id) {
+    public int getQuantityLevel(ResourceLocation id) {
         if (id == null) {
             return 0;
         }

@@ -3,7 +3,9 @@ package com.example.generatormod.client;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public final class ClientGeneratorState {
@@ -21,13 +23,16 @@ public final class ClientGeneratorState {
     private long leftoverMillis;
     private String message = "";
     private final Set<ResourceLocation> unlockedItems = new HashSet<>();
+    private final Map<ResourceLocation, Integer> speedLevels = new HashMap<>();
+    private final Map<ResourceLocation, Integer> quantityLevels = new HashMap<>();
 
     private ClientGeneratorState() {
     }
 
     public void apply(ResourceLocation selectedItem, boolean running, long storedItems, int speedLevel, int quantityLevel,
                       long intervalMillis, int amountPerCycle, long runningSince, long lastUpdate, long leftoverMillis,
-                      Set<ResourceLocation> unlockedItems, String message) {
+                      Set<ResourceLocation> unlockedItems, Map<ResourceLocation, Integer> speedLevels,
+                      Map<ResourceLocation, Integer> quantityLevels, String message) {
         this.selectedItem = selectedItem;
         this.running = running;
         this.storedItems = storedItems;
@@ -40,6 +45,10 @@ public final class ClientGeneratorState {
         this.leftoverMillis = leftoverMillis;
         this.unlockedItems.clear();
         this.unlockedItems.addAll(unlockedItems);
+        this.speedLevels.clear();
+        this.speedLevels.putAll(speedLevels);
+        this.quantityLevels.clear();
+        this.quantityLevels.putAll(quantityLevels);
         this.message = message == null ? "" : message;
     }
 
@@ -59,8 +68,22 @@ public final class ClientGeneratorState {
         return speedLevel;
     }
 
+    public int getSpeedLevel(ResourceLocation id) {
+        if (id == null) {
+            return 0;
+        }
+        return speedLevels.getOrDefault(id, 0);
+    }
+
     public int getQuantityLevel() {
         return quantityLevel;
+    }
+
+    public int getQuantityLevel(ResourceLocation id) {
+        if (id == null) {
+            return 0;
+        }
+        return quantityLevels.getOrDefault(id, 0);
     }
 
     public long getIntervalMillis() {

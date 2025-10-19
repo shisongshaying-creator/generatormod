@@ -78,6 +78,8 @@ public final class GeneratorNetwork {
             state.getLastRealTime(),
             state.getLeftoverMillis(),
             state.getUnlockedItems(),
+            state.getSpeedLevels(),
+            state.getQuantityLevels(),
             message
         );
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
