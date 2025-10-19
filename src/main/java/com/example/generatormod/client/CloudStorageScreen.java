@@ -27,7 +27,6 @@ public class CloudStorageScreen extends Screen {
     private static final int MARGIN = 16;
     private static final int LIST_WIDTH = 240;
     private static final int ENTRY_HEIGHT = 36;
-    private static final int CONTROL_SPACING = 24;
 
     private CloudStorageList storageList;
     private final Map<ResourceLocation, EntryData> visibleItems = new HashMap<>();
@@ -51,7 +50,11 @@ public class CloudStorageScreen extends Screen {
 
         int controlsLeft = getControlsLeft();
         int amountTop = listTop;
-        this.amountField = new EditBox(this.font, controlsLeft, amountTop, 110, 20,
+        int amountFieldHeight = 20;
+        int buttonHeight = 20;
+        int buttonSpacing = 6;
+        int buttonOffset = 10;
+        this.amountField = new EditBox(this.font, controlsLeft, amountTop, 110, amountFieldHeight,
                 Component.translatable("screen." + GeneratorMod.MODID + ".cloud_storage_amount_label"));
         this.amountField.setFilter(value -> value == null || value.isEmpty() || value.chars().allMatch(Character::isDigit));
         this.amountField.setResponder(value -> updateControls());
@@ -60,13 +63,13 @@ public class CloudStorageScreen extends Screen {
         this.depositButton = addRenderableWidget(Button.builder(
                         Component.translatable("button." + GeneratorMod.MODID + ".deposit"),
                         b -> depositSelected())
-                .bounds(controlsLeft, amountTop + CONTROL_SPACING, 110, 20)
+                .bounds(controlsLeft, amountTop + amountFieldHeight + buttonOffset, 110, buttonHeight)
                 .build());
 
         this.withdrawButton = addRenderableWidget(Button.builder(
                         Component.translatable("button." + GeneratorMod.MODID + ".withdraw"),
                         b -> withdrawSelected())
-                .bounds(controlsLeft, amountTop + CONTROL_SPACING * 2, 110, 20)
+                .bounds(controlsLeft, this.depositButton.getY() + buttonHeight + buttonSpacing, 110, buttonHeight)
                 .build());
 
         refreshEntries();
@@ -166,11 +169,14 @@ public class CloudStorageScreen extends Screen {
             int controlsLeft = getControlsLeft();
             Component amountLabel = Component.translatable("screen." + GeneratorMod.MODID + ".cloud_storage_amount_label");
             graphics.drawString(this.font, amountLabel, controlsLeft, this.amountField.getY() - 10, 0xFFFFFF, false);
+            int hintTop = this.withdrawButton != null
+                    ? this.withdrawButton.getY() + this.withdrawButton.getHeight() + 6
+                    : this.amountField.getY() + this.amountField.getHeight() + 6;
             Component hint = Component.translatable("screen." + GeneratorMod.MODID + ".cloud_storage_hint");
-            graphics.drawString(this.font, hint, controlsLeft, this.amountField.getY() + this.amountField.getHeight() + 6, 0xA0A0A0, false);
+            graphics.drawString(this.font, hint, controlsLeft, hintTop, 0xA0A0A0, false);
 
             CloudStorageEntry selected = this.storageList != null ? this.storageList.getSelected() : null;
-            int infoTop = this.amountField.getY() + this.amountField.getHeight() + 24;
+            int infoTop = hintTop + 18;
             if (selected != null) {
                 graphics.drawString(this.font, selected.getName(), controlsLeft, infoTop, 0xFFFFFF, false);
                 infoTop += 12;
