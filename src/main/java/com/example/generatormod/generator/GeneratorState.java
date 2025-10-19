@@ -19,7 +19,6 @@ import java.util.Optional;
 import java.util.Set;
 
 public class GeneratorState {
-    public static final int UNLOCK_COST = 4;
     private static final String TAG_SELECTED = "Selected";
     private static final String TAG_RUNNING = "Running";
     private static final String TAG_STORED = "Stored";
@@ -126,7 +125,8 @@ public class GeneratorState {
         Item item = optionalItem.get();
         boolean wasUnlocked = unlockedItems.contains(id);
         if (!wasUnlocked) {
-            if (!consumeItems(player, item, UNLOCK_COST)) {
+            int unlockCost = GeneratorItems.getUnlockCost(item);
+            if (!consumeItems(player, item, unlockCost)) {
                 transientMessage = "unlock_missing_item";
                 return false;
             }
