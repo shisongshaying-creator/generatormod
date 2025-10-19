@@ -162,17 +162,18 @@ public class GeneratorScreen extends Screen {
     private void drawSummary(GuiGraphics graphics, int left, int infoBottom, int right, int buttonsLeft, int buttonsTop) {
         ClientGeneratorState state = ClientGeneratorState.INSTANCE;
         int lineHeight = 12;
+        ClientGeneratorState.DisplayState displayState = state.computeDisplayState(System.currentTimeMillis());
 
         Component statusComponent = Component.translatable("screen." + GeneratorMod.MODID + ".status",
                 state.isRunning()
                         ? Component.translatable("screen." + GeneratorMod.MODID + ".running")
                         : Component.translatable("screen." + GeneratorMod.MODID + ".stopped"));
-        Component storedComponent = Component.translatable("screen." + GeneratorMod.MODID + ".stored", state.getStoredItems());
+        Component storedComponent = Component.translatable("screen." + GeneratorMod.MODID + ".stored", displayState.storedItems());
 
         boolean hasNextIn = state.isRunning() && state.getIntervalMillis() > 0;
         Component nextComponent = hasNextIn
                 ? Component.translatable("screen." + GeneratorMod.MODID + ".next_in",
-                        formatDuration(Math.max(0L, state.getIntervalMillis() - state.getLeftoverMillis())))
+                        formatDuration(Math.max(0L, state.getIntervalMillis() - displayState.elapsedInCycleMillis())))
                 : null;
 
         boolean hasMessage = !state.getMessage().isEmpty();
