@@ -13,8 +13,10 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -24,6 +26,10 @@ public class GeneratorState {
     private static final String TAG_STORED = "Stored";
     private static final String TAG_SPEED = "Speed";
     private static final String TAG_QUANTITY = "Quantity";
+    private static final String TAG_SPEED_LEVELS = "SpeedLevels";
+    private static final String TAG_QUANTITY_LEVELS = "QuantityLevels";
+    private static final String TAG_LEVEL_ITEM = "Item";
+    private static final String TAG_LEVEL_VALUE = "Level";
     private static final String TAG_LAST_REAL = "LastReal";
     private static final String TAG_LEFTOVER = "Leftover";
     private static final String TAG_RUNNING_SINCE = "RunningSince";
@@ -34,8 +40,8 @@ public class GeneratorState {
     private ResourceLocation selectedItem;
     private boolean running;
     private long storedItems;
-    private int speedLevel;
-    private int quantityLevel;
+    private final Map<ResourceLocation, Integer> speedLevels = new HashMap<>();
+    private final Map<ResourceLocation, Integer> quantityLevels = new HashMap<>();
     private long lastRealTime;
     private long leftoverMillis;
     private long runningSince;
@@ -47,8 +53,46 @@ public class GeneratorState {
         selectedItem = tag.contains(TAG_SELECTED) ? new ResourceLocation(tag.getString(TAG_SELECTED)) : null;
         running = tag.getBoolean(TAG_RUNNING);
         storedItems = tag.getLong(TAG_STORED);
-        speedLevel = tag.getInt(TAG_SPEED);
-        quantityLevel = tag.getInt(TAG_QUANTITY);
+        speedLevels.clear();
+        quantityLevels.clear();
+        if (tag.contains(TAG_SPEED_LEVELS, Tag.TAG_LIST)) {
+            ListTag speedList = tag.getList(TAG_SPEED_LEVELS, Tag.TAG_COMPOUND);
+            for (int i = 0; i < speedList.size(); i++) {
+                CompoundTag levelTag = speedList.getCompound(i);
+                String idValue = levelTag.getString(TAG_LEVEL_ITEM);
+                if (idValue.isEmpty()) {
+                    continue;
+                }
+                int level = Mth.clamp(levelTag.getInt(TAG_LEVEL_VALUE), 0, MAX_LEVEL);
+                if (level > 0) {
+                    speedLevels.put(new ResourceLocation(idValue), level);
+                }
+            }
+        }
+        if (tag.contains(TAG_QUANTITY_LEVELS, Tag.TAG_LIST)) {
+            ListTag quantityList = tag.getList(TAG_QUANTITY_LEVELS, Tag.TAG_COMPOUND);
+            for (int i = 0; i < quantityList.size(); i++) {
+                CompoundTag levelTag = quantityList.getCompound(i);
+                String idValue = levelTag.getString(TAG_LEVEL_ITEM);
+                if (idValue.isEmpty()) {
+                    continue;
+                }
+                int level = Mth.clamp(levelTag.getInt(TAG_LEVEL_VALUE), 0, MAX_LEVEL);
+                if (level > 0) {
+                    quantityLevels.put(new ResourceLocation(idValue), level);
+                }
+            }
+        }
+        if (selectedItem != null) {
+            int legacySpeed = Mth.clamp(tag.getInt(TAG_SPEED), 0, MAX_LEVEL);
+            if (legacySpeed > 0 && !speedLevels.containsKey(selectedItem)) {
+                speedLevels.put(selectedItem, legacySpeed);
+            }
+            int legacyQuantity = Mth.clamp(tag.getInt(TAG_QUANTITY), 0, MAX_LEVEL);
+            if (legacyQuantity > 0 && !quantityLevels.containsKey(selectedItem)) {
+                quantityLevels.put(selectedItem, legacyQuantity);
+            }
+        }
         lastRealTime = tag.getLong(TAG_LAST_REAL);
         leftoverMillis = tag.getLong(TAG_LEFTOVER);
         runningSince = tag.getLong(TAG_RUNNING_SINCE);
@@ -73,8 +117,32 @@ public class GeneratorState {
         }
         tag.putBoolean(TAG_RUNNING, running);
         tag.putLong(TAG_STORED, storedItems);
-        tag.putInt(TAG_SPEED, speedLevel);
-        tag.putInt(TAG_QUANTITY, quantityLevel);
+        tag.remove(TAG_SPEED);
+        tag.remove(TAG_QUANTITY);
+        ListTag speedList = new ListTag();
+        for (Map.Entry<ResourceLocation, Integer> entry : speedLevels.entrySet()) {
+            int level = Mth.clamp(entry.getValue(), 0, MAX_LEVEL);
+            if (level <= 0) {
+                continue;
+            }
+            CompoundTag entryTag = new CompoundTag();
+            entryTag.putString(TAG_LEVEL_ITEM, entry.getKey().toString());
+            entryTag.putInt(TAG_LEVEL_VALUE, level);
+            speedList.add(entryTag);
+        }
+        tag.put(TAG_SPEED_LEVELS, speedList);
+        ListTag quantityList = new ListTag();
+        for (Map.Entry<ResourceLocation, Integer> entry : quantityLevels.entrySet()) {
+            int level = Mth.clamp(entry.getValue(), 0, MAX_LEVEL);
+            if (level <= 0) {
+                continue;
+            }
+            CompoundTag entryTag = new CompoundTag();
+            entryTag.putString(TAG_LEVEL_ITEM, entry.getKey().toString());
+            entryTag.putInt(TAG_LEVEL_VALUE, level);
+            quantityList.add(entryTag);
+        }
+        tag.put(TAG_QUANTITY_LEVELS, quantityList);
         tag.putLong(TAG_LAST_REAL, lastRealTime);
         tag.putLong(TAG_LEFTOVER, leftoverMillis);
         tag.putLong(TAG_RUNNING_SINCE, runningSince);
@@ -159,11 +227,11 @@ public class GeneratorState {
     }
 
     public int getSpeedLevel() {
-        return speedLevel;
+        return getSpeedLevel(selectedItem);
     }
 
     public int getQuantityLevel() {
-        return quantityLevel;
+        return getQuantityLevel(selectedItem);
     }
 
     public long getIntervalMillis() {
@@ -171,11 +239,12 @@ public class GeneratorState {
             return 0L;
         }
         Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
-        return optionalItem.map(item -> GeneratorItems.computeIntervalMillis(item, speedLevel)).orElse(0L);
+        int level = getSpeedLevel(selectedItem);
+        return optionalItem.map(item -> GeneratorItems.computeIntervalMillis(item, level)).orElse(0L);
     }
 
     public int getAmountPerCycle() {
-        return GeneratorItems.computeAmountPerCycle(quantityLevel);
+        return GeneratorItems.computeAmountPerCycle(getQuantityLevel(selectedItem));
     }
 
     public long getRunningSince() {
@@ -235,12 +304,13 @@ public class GeneratorState {
             transientMessage = "no_selection";
             return false;
         }
-        if (speedLevel >= MAX_LEVEL) {
+        int currentLevel = getSpeedLevel(selectedItem);
+        if (currentLevel >= MAX_LEVEL) {
             transientMessage = "speed_max_level";
             return false;
         }
 
-        int cost = getUpgradeCost(speedLevel);
+        int cost = getUpgradeCost(currentLevel);
         Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
         if (optionalItem.isEmpty()) {
             transientMessage = "invalid_item";
@@ -250,7 +320,8 @@ public class GeneratorState {
             transientMessage = "upgrade_missing_items";
             return false;
         }
-        speedLevel = Mth.clamp(speedLevel + 1, 0, MAX_LEVEL);
+        int newLevel = Mth.clamp(currentLevel + 1, 0, MAX_LEVEL);
+        setSpeedLevel(selectedItem, newLevel);
         dirty = true;
         transientMessage = "speed_upgraded";
         return true;
@@ -261,12 +332,13 @@ public class GeneratorState {
             transientMessage = "no_selection";
             return false;
         }
-        if (quantityLevel >= MAX_LEVEL) {
+        int currentLevel = getQuantityLevel(selectedItem);
+        if (currentLevel >= MAX_LEVEL) {
             transientMessage = "quantity_max_level";
             return false;
         }
 
-        int cost = getUpgradeCost(quantityLevel);
+        int cost = getUpgradeCost(currentLevel);
         Optional<Item> optionalItem = GeneratorItems.resolve(selectedItem);
         if (optionalItem.isEmpty()) {
             transientMessage = "invalid_item";
@@ -276,7 +348,8 @@ public class GeneratorState {
             transientMessage = "upgrade_missing_items";
             return false;
         }
-        quantityLevel = Mth.clamp(quantityLevel + 1, 0, MAX_LEVEL);
+        int newLevel = Mth.clamp(currentLevel + 1, 0, MAX_LEVEL);
+        setQuantityLevel(selectedItem, newLevel);
         dirty = true;
         transientMessage = "quantity_upgraded";
         return true;
@@ -309,11 +382,11 @@ public class GeneratorState {
     }
 
     public int getSpeedUpgradeCost() {
-        return getUpgradeCost(speedLevel);
+        return getUpgradeCost(getSpeedLevel());
     }
 
     public int getQuantityUpgradeCost() {
-        return getUpgradeCost(quantityLevel);
+        return getUpgradeCost(getQuantityLevel());
     }
 
     private int getUpgradeCost(int level) {
@@ -342,5 +415,41 @@ public class GeneratorState {
 
     public boolean isUnlocked(ResourceLocation id) {
         return unlockedItems.contains(id);
+    }
+
+    private int getSpeedLevel(ResourceLocation id) {
+        if (id == null) {
+            return 0;
+        }
+        return speedLevels.getOrDefault(id, 0);
+    }
+
+    private void setSpeedLevel(ResourceLocation id, int level) {
+        if (id == null) {
+            return;
+        }
+        if (level <= 0) {
+            speedLevels.remove(id);
+        } else {
+            speedLevels.put(id, level);
+        }
+    }
+
+    private int getQuantityLevel(ResourceLocation id) {
+        if (id == null) {
+            return 0;
+        }
+        return quantityLevels.getOrDefault(id, 0);
+    }
+
+    private void setQuantityLevel(ResourceLocation id, int level) {
+        if (id == null) {
+            return;
+        }
+        if (level <= 0) {
+            quantityLevels.remove(id);
+        } else {
+            quantityLevels.put(id, level);
+        }
     }
 }
